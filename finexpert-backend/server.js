@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const sequelize = require('./models/index'); // Import Sequelize connection
 const authRoutes = require('./routes/authRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // Function to start server after DB connection
 async function startServer() {
