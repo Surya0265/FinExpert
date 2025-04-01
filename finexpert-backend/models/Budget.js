@@ -20,6 +20,14 @@ const Budget = sequelize.define('Budget', {
     total_amount: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
+    },
+    allocated_budget: {
+        type: DataTypes.JSON, // Stores per-category allocations
+        allowNull: true
+    },
+    alerts: {
+        type: DataTypes.JSON, // Stores alert thresholds
+        allowNull: true
     }
 }, {
     tableName: 'budgets',
