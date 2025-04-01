@@ -178,3 +178,7 @@ const callGeminiAI = async (prompt) => {
     }
 };
 
+
+
+
+

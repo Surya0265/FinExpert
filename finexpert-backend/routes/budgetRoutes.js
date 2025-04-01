@@ -9,3 +9,4 @@ router.get('/alerts',authMiddleware, budgetController.checkBudgetAlerts);
 router.get('/advice', authMiddleware,budgetController.getBudgetAdvice);
 
 module.exports = router;
+ 

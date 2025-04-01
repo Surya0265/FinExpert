@@ -5,6 +5,7 @@ const { PrismaClient } = require('@prisma/client'); // Import Prisma Client
 const authRoutes = require('./routes/authRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
+const reportRoutes=require('./routes/reportRoutes')
 
 const app = express();
 const prisma = new PrismaClient(); // Initialize Prisma
@@ -17,6 +18,7 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/budgets', budgetRoutes);
+app.use('api/report',reportRoutes)
 
 // Function to start the server
 async function startServer() {
