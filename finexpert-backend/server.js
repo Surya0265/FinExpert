@@ -18,7 +18,7 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/budgets', budgetRoutes);
-app.use('api/report',reportRoutes)
+app.use('/api/report',reportRoutes)
 
 // Function to start the server
 async function startServer() {

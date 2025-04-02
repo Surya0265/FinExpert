@@ -2,122 +2,117 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const { PrismaClient } = require('@prisma/client');
-
+const path = require('path');
+const PdfPrinter = require('pdfmake');
 const prisma = new PrismaClient();
 
-// Function to generate PDF for a given time period
+const fonts = { Helvetica: { normal: 'Helvetica', bold: 'Helvetica-Bold' } };
+const printer = new PdfPrinter(fonts);
+
 const generatePDF = async (userId, days) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             const endDate = new Date();
             const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days); // Adjust based on user input
+            startDate.setDate(startDate.getDate() - days);
 
-            const expenses = await prisma.expense.findMany({
-                where: {
-                    user_id: userId,
-                    date: {
-                        gte: startDate,
-                        lte: endDate,
-                    },
-                },
+            prisma.expenses.findMany({
+                where: { user_id: userId, date: { gte: startDate, lte: endDate } },
                 select: { category: true, amount: true, date: true },
-            });
+            }).then(expenses => {
+                if (expenses.length === 0) return reject("No expenses found for the selected period.");
 
-            if (expenses.length === 0) {
-                return reject("No expenses found for the selected period.");
-            }
+                const reportsDir = path.join(__dirname, "reports");
+                if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
+                
+                const filePath = path.join(reportsDir, `Financial_Report_${userId}_${days}days.pdf`);
 
-            const doc = new PDFDocument();
-            const filePath = `./reports/Financial_Report_${userId}_${days}days.pdf`;
-            const writeStream = fs.createWriteStream(filePath);
-            doc.pipe(writeStream);
+                const docDefinition = {
+                    content: [
+                        { text: `Financial Report (${days} days)`, style: 'header' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', 'auto', 'auto'],
+                                body: [
+                                    [{ text: 'Category', style: 'tableHeader' }, 
+                                     { text: 'Amount ($)', style: 'tableHeader' }, 
+                                     { text: 'Date', style: 'tableHeader' }],
+                                    ...expenses.map(exp => [
+                                        exp.category,
+                                        `$${exp.amount.toFixed(2)}`,
+                                        new Date(exp.date).toLocaleDateString(),
+                                    ])
+                                ]
+                            }
+                        }
+                    ],
+                    styles: {
+                        header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
+                        tableHeader: { bold: true, fillColor: '#EEEEEE', fontSize: 12 }
+                    },
+                    defaultStyle: { font: 'Helvetica' }
+                };
 
-            // Title
-            doc.fontSize(20).text(`Financial Report (${days} days)`, { align: 'center' });
-            doc.moveDown();
-
-            // Table Header
-            doc.fontSize(12).text('Category', 100, 100, { continued: true });
-            doc.text('Amount', 300, 100, { continued: true });
-            doc.text('Date', 450, 100);
-            doc.moveDown();
-
-            // Add Expenses Data
-            expenses.forEach(exp => {
-                doc.text(exp.category, 100, doc.y, { continued: true });
-                doc.text(`$${exp.amount.toFixed(2)}`, 300, doc.y, { continued: true });
-                doc.text(new Date(exp.date).toDateString(), 450, doc.y);
-                doc.moveDown();
-            });
-
-            doc.end();
-            writeStream.on('finish', () => resolve(filePath));
+                const pdfDoc = printer.createPdfKitDocument(docDefinition);
+                const writeStream = fs.createWriteStream(filePath);
+                pdfDoc.pipe(writeStream);
+                pdfDoc.end();
+                writeStream.on('finish', () => resolve(filePath));
+                writeStream.on('error', reject);
+            }).catch(reject);
         } catch (error) {
             reject(error);
         }
     });
 };
 
-// Controller to Download the Report
 exports.downloadReport = async (req, res) => {
     try {
         const userId = req.user.user_id;
         const { days } = req.query;
-
-        if (!days || isNaN(days) || days <= 0) {
-            return res.status(400).json({ message: "Invalid number of days. Provide a valid number." });
-        }
-
+        if (!days || isNaN(days) || days <= 0) return res.status(400).json({ message: "Invalid number of days." });
         const filePath = await generatePDF(userId, parseInt(days));
-
-        res.download(filePath, `Financial_Report_${userId}_${days}days.pdf`, (err) => {
-            if (err) {
-                console.error("Download Error:", err);
-                res.status(500).json({ message: "Error downloading report." });
-            }
+        fs.access(filePath, fs.constants.F_OK, (err) => {
+            if (err) return res.status(500).json({ message: "Report file not found." });
+            res.download(filePath, `Financial_Report_${userId}_${days}days.pdf`, (err) => {
+                if (err) res.status(500).json({ message: "Error downloading report." });
+            });
         });
     } catch (error) {
-        console.error("Report Generation Error:", error);
         res.status(500).json({ message: "Error generating report." });
     }
 };
 
-// Controller to Send Report via Email
 exports.sendReportByEmail = async (req, res) => {
     try {
         const { email, days } = req.body;
         if (!email) return res.status(400).json({ message: "Email is required." });
-        if (!days || isNaN(days) || days <= 0) {
-            return res.status(400).json({ message: "Invalid number of days. Provide a valid number." });
-        }
-
+        if (!days || isNaN(days) || days <= 0) return res.status(400).json({ message: "Invalid number of days." });
+        
         const userId = req.user.user_id;
         const filePath = await generatePDF(userId, parseInt(days));
 
-        // Configure Nodemailer Transport
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
+        fs.access(filePath, fs.constants.F_OK, async (err) => {
+            if (err) return res.status(500).json({ message: "Report file not found." });
+            
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+            });
+            
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: `Your Financial Report 📊 (${days} days)`,
+                text: `Hello! Please find your financial report for the last ${days} days attached.`,
+                attachments: [{ filename: `Financial_Report_${userId}_${days}days.pdf`, path: filePath }],
+            };
+            
+            await transporter.sendMail(mailOptions);
+            res.json({ message: `Financial report for ${days} days sent successfully to ${email}` });
         });
-
-        // Email Options
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: `Your Financial Report 📊 (${days} days)`,
-            text: `Hello! Please find your financial report for the last ${days} days attached.`,
-            attachments: [{ filename: `Financial_Report_${userId}_${days}days.pdf`, path: filePath }],
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        res.json({ message: `Financial report for ${days} days sent successfully to ${email}` });
     } catch (error) {
-        console.error("Email Sending Error:", error);
         res.status(500).json({ message: "Error sending report via email." });
     }
 };
