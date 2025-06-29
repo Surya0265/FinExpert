@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { Wallet } from 'lucide-react-native';
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '@/utils/storage';
 import { theme } from '@/constants/theme';
 
 const { width, height } = Dimensions.get('window');
@@ -18,7 +18,7 @@ export default function SplashScreen() {
 
   const checkAuthStatus = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await storage.getItem('userToken');
       
       setTimeout(() => {
         setIsLoading(false);

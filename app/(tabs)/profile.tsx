@@ -11,8 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { User, Settings, Bell, Shield, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import Toast from 'react-native-toast-message';
+import { storage } from '@/utils/storage';
 import { theme } from '@/constants/theme';
 
 export default function ProfileScreen() {
@@ -27,7 +27,7 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await SecureStore.deleteItemAsync('userToken');
+              await storage.removeItem('userToken');
               Toast.show({
                 type: 'success',
                 text1: 'Logged Out',

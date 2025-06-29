@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
+import { storage } from '@/utils/storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -14,15 +16,12 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Import SecureStore dynamically to avoid issues on web
-      const { default: SecureStore } = await import('expo-secure-store');
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await storage.getItem('userToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      // Handle case where SecureStore is not available (web platform)
-      console.log('SecureStore not available on this platform');
+      console.error('Error getting token:', error);
     }
     return config;
   },
@@ -34,9 +33,10 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access
+      await storage.removeItem('userToken');
       console.log('Unauthorized access - redirecting to login');
     }
     return Promise.reject(error);
@@ -66,7 +66,7 @@ export const authAPI = {
 };
 
 // Expense API endpoints
-export const expenseAPI = {
+export const expensesAPI = {
   getExpenses: (params?: { 
     page?: number; 
     limit?: number; 
@@ -74,87 +74,54 @@ export const expenseAPI = {
     startDate?: string; 
     endDate?: string; 
   }) =>
-    api.get('/expenses', { params }),
+    api.get('/expenses/getexpenses', { params }),
   
-  createExpense: (expense: {
+  addExpense: (expense: {
     amount: number;
-    description: string;
     category: string;
-    date: string;
   }) =>
-    api.post('/expenses', expense),
+    api.post('/expenses/addexpenses', expense),
   
   updateExpense: (id: string, expense: Partial<{
     amount: number;
-    description: string;
     category: string;
-    date: string;
   }>) =>
-    api.put(`/expenses/${id}`, expense),
+    api.put(`/expenses/expenses/${id}`, expense),
   
   deleteExpense: (id: string) =>
-    api.delete(`/expenses/${id}`),
+    api.delete(`/expenses/expenses/${id}`),
   
-  getExpenseById: (id: string) =>
-    api.get(`/expenses/${id}`),
+  getExpensesByPeriod: (period: string) =>
+    api.get(`/expenses/expenses/${period}`),
+  
+  getExpensesByCategory: () =>
+    api.get('/expenses/expenses/category-wise'),
 };
 
 // Budget API endpoints
 export const budgetAPI = {
-  getBudgets: () =>
-    api.get('/budgets'),
-  
-  createBudget: (budget: {
-    category: string;
-    amount: number;
-    period: 'monthly' | 'weekly' | 'yearly';
+  setBudget: (budgetData: {
+    total_amount: number;
   }) =>
-    api.post('/budgets', budget),
+    api.post('/budgets/set', budgetData),
   
-  updateBudget: (id: string, budget: Partial<{
-    category: string;
-    amount: number;
-    period: 'monthly' | 'weekly' | 'yearly';
-  }>) =>
-    api.put(`/budgets/${id}`, budget),
+  getBudgetAlerts: () =>
+    api.get('/budgets/alerts'),
   
-  deleteBudget: (id: string) =>
-    api.delete(`/budgets/${id}`),
-  
-  getBudgetById: (id: string) =>
-    api.get(`/budgets/${id}`),
+  getBudgetAdvice: (period: string) =>
+    api.get(`/budgets/advice?period=${period}`),
 };
 
 // Reports API endpoints
 export const reportsAPI = {
-  getExpenseReport: (params: {
-    startDate: string;
-    endDate: string;
-    groupBy?: 'category' | 'date';
-  }) =>
-    api.get('/reports/expenses', { params }),
+  downloadReport: (days: number) =>
+    api.get(`/report/download-report?days=${days}`),
   
-  getBudgetReport: (params: {
-    startDate: string;
-    endDate: string;
+  sendReportByEmail: (data: {
+    email: string;
+    days: number;
   }) =>
-    api.get('/reports/budget', { params }),
-  
-  getFinancialSummary: (params: {
-    period: 'week' | 'month' | 'year';
-  }) =>
-    api.get('/reports/summary', { params }),
-  
-  exportReport: (params: {
-    type: 'expenses' | 'budget' | 'summary';
-    format: 'pdf' | 'csv';
-    startDate: string;
-    endDate: string;
-  }) =>
-    api.get('/reports/export', { 
-      params,
-      responseType: 'blob'
-    }),
+    api.post('/report/send-report', data),
 };
 
 export default api;

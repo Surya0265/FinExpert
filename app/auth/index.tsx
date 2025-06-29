@@ -13,9 +13,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { Mail, Lock, Eye, EyeOff, Wallet } from 'lucide-react-native';
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import Toast from 'react-native-toast-message';
 import { authAPI } from '@/services/api';
+import { storage } from '@/utils/storage';
 import { theme } from '@/constants/theme';
 
 export default function LoginScreen() {
@@ -39,7 +39,7 @@ export default function LoginScreen() {
       const response = await authAPI.login({ email, password });
       const { token } = response.data;
 
-      await SecureStore.setItemAsync('userToken', token);
+      await storage.setItem('userToken', token);
       
       Toast.show({
         type: 'success',
