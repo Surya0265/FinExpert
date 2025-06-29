@@ -9,15 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Shield, 
-  HelpCircle, 
-  LogOut,
-  ChevronRight
-} from 'lucide-react-native';
+import { User, Settings, Bell, Shield, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import Toast from 'react-native-toast-message';

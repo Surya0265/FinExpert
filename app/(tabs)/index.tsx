@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { Wallet, Calendar, AlertTriangle, Plus, PieChart } from 'lucide-react-native';
+import { Wallet, Calendar, TriangleAlert as AlertTriangle, Plus, ChartPie as PieChart } from 'lucide-react-native';
 import { LineChart, PieChart as RNPieChart } from 'react-native-chart-kit';
 import { router } from 'expo-router';
 import Toast from 'react-native-toast-message';

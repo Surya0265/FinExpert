@@ -13,21 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { 
-  Plus, 
-  X, 
-  Edit3, 
-  Trash2,
-  UtensilsCrossed,
-  Car,
-  ShoppingBag,
-  Gamepad2,
-  Receipt,
-  Heart,
-  GraduationCap,
-  Plane,
-  MoreHorizontal
-} from 'lucide-react-native';
+import { Plus, X, CreditCard as Edit3, Trash2, UtensilsCrossed, Car, ShoppingBag, Gamepad2, Receipt, Heart, GraduationCap, Plane, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { expensesAPI } from '@/services/api';
 import { theme } from '@/constants/theme';

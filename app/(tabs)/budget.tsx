@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { PieChart, Lightbulb, TrendingUp, AlertTriangle, X } from 'lucide-react-native';
+import { ChartPie as PieChart, Lightbulb, TrendingUp, TriangleAlert as AlertTriangle, X } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { budgetAPI } from '@/services/api';
 import { theme } from '@/constants/theme';
