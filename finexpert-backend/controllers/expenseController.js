@@ -85,7 +85,7 @@ exports.getExpensesByCategory = async (req, res) => {
     try {
         const userId = req.user.user_id;
 
-        const expenses = await prisma.expense.findMany({
+        const expenses = await prisma.expenses.findMany({
             where: { user_id: userId },
             select: { category: true, amount: true },
         });
@@ -114,8 +114,14 @@ exports.updateExpense = async (req, res) => {
     try {
         const { amount, category } = req.body;
         await prisma.expenses.updateMany({
-            where: { expense_id: parseInt(req.params.expense_id), user_id: req.user.user_id },
-            data: { amount: parseFloat(amount), category },
+            where: { 
+                expense_id: req.params.expense_id, 
+                user_id: req.user.user_id 
+            },
+            data: { 
+                amount: parseFloat(amount), 
+                category 
+            },
         });
 
         res.json({ message: "Expense updated successfully" });
@@ -129,7 +135,10 @@ exports.updateExpense = async (req, res) => {
 exports.deleteExpense = async (req, res) => {
     try {
         await prisma.expenses.deleteMany({
-            where: { expense_id: parseInt(req.params.expense_id), user_id: req.user.user_id },
+            where: { 
+                expense_id: req.params.expense_id, 
+                user_id: req.user.user_id 
+            },
         });
 
         res.json({ message: "Expense deleted successfully" });
