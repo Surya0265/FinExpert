@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BarChart, PieChart } from 'react-native-chart-kit';
-import { Calendar, TrendingUp, PieChart as PieChartIcon } from 'lucide-react-native';
+import { Calendar, TrendingUp, ChartPie as PieChartIcon } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { expenseService, ChartData } from '@/services/expenseService';
 import { budgetService } from '@/services/budgetService';

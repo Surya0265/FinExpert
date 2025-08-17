@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { ShoppingBag, Car, Home, Coffee, MoreHorizontal } from 'lucide-react-native';
+import { ShoppingBag, Car, Chrome as Home, Coffee, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Expense } from '@/services/expenseService';
 

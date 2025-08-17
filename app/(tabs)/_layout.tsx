@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, PlusCircle, BarChart3, Settings } from 'lucide-react-native';
+import { Chrome as Home, CirclePlus as PlusCircle, ChartBar as BarChart3, Settings } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 
 export default function TabLayout() {

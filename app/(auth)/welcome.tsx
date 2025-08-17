@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { TrendingUp, PieChart, Shield } from 'lucide-react-native';
+import { TrendingUp, ChartPie as PieChart, Shield } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import CustomButton from '@/components/CustomButton';
 

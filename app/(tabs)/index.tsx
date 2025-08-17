@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react-native';
+import { DollarSign, TrendingUp, TrendingDown, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { expenseService, Expense } from '@/services/expenseService';
 import { budgetService } from '@/services/budgetService';

@@ -10,17 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import {
-  User,
-  Settings,
-  DollarSign,
-  Download,
-  Mail,
-  LogOut,
-  Bell,
-  Shield,
-  HelpCircle,
-} from 'lucide-react-native';
+import { User, Settings, DollarSign, Download, Mail, LogOut, Bell, Shield, CircleHelp as HelpCircle } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { authService } from '@/services/authService';
 import { budgetService } from '@/services/budgetService';
