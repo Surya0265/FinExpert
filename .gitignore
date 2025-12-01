@@ -6,6 +6,7 @@ node_modules/
 
 # Ignore environment files
 .env
+.expo/
 
 # Ignore build output
 dist/

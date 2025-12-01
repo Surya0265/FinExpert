@@ -8,6 +8,19 @@ const prisma = new PrismaClient();
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+        console.log('Registration request body:', req.body);
+        console.log('Extracted values:', { name, email, password: password ? '[HIDDEN]' : undefined });
+        
+        if (!name) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+        if (!password) {
+            return res.status(400).json({ error: 'Password is required' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert user using Prisma
@@ -22,6 +35,12 @@ const registerUser = async (req, res) => {
         res.status(201).json({ message: 'User registered successfully', user: newUser });
     } catch (error) {
         console.error('Registration error:', error);
+        
+        // Handle unique constraint violation (duplicate email)
+        if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+            return res.status(400).json({ error: 'Email already exists. Please use a different email or try logging in.' });
+        }
+        
         res.status(500).json({ error: 'Error registering user' });
     }
 };

@@ -87,10 +87,19 @@ exports.setBudget = async (req, res) => {
 exports.checkBudgetAlerts = async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const budget = await prisma.budgets.findUnique({ where: { user_id: userId } });
+        
+        // Get the most recent budget for the user
+        const budget = await prisma.budgets.findFirst({ 
+            where: { user_id: userId },
+            orderBy: { budget_id: 'desc' }
+        });
 
         if (!budget || !budget.allocated_budget) {
-            return res.status(400).json({ message: "Budget not set." });
+            return res.status(200).json({ 
+                message: "No budget set yet", 
+                alerts: [],
+                isEmpty: true 
+            });
         }
 
         const allocatedBudget = budget.allocated_budget;
