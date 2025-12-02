@@ -1,14 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { PrismaClient } = require('@prisma/client'); // Import Prisma Client
+const prisma = require('./prismaClient');
 const authRoutes = require('./routes/authRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
 const reportRoutes=require('./routes/reportRoutes')
 
 const app = express();
-const prisma = new PrismaClient(); // Initialize Prisma
 
 // Middleware
 app.use(express.json());

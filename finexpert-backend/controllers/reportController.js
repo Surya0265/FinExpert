@@ -1,10 +1,9 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
-const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const PdfPrinter = require('pdfmake');
-const prisma = new PrismaClient();
+const prisma = require('../prismaClient');
 
 const fonts = { Helvetica: { normal: 'Helvetica', bold: 'Helvetica-Bold' } };
 const printer = new PdfPrinter(fonts);

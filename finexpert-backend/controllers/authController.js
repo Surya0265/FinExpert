@@ -1,9 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client'); // Import Prisma Client
-require('dotenv').config();
-
-const prisma = new PrismaClient();
+const prisma = require('../prismaClient');
 
 const registerUser = async (req, res) => {
     try {
