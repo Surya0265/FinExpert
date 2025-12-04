@@ -1,19 +1,45 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { expenseService, ChartData } from '../../services/expenseService';
 import { budgetService, AlertsResponse } from '../../services/budgetService';
 import { BarChart, PieChart } from 'react-native-chart-kit';
+import { LogOut } from 'lucide-react-native';
 
 const screenWidth = Dimensions.get('window').width - 32;
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [periodData, setPeriodData] = useState<ChartData[]>([]);
   const [categoryData, setCategoryData] = useState<ChartData[]>([]);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        onPress: () => {},
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem('authToken');
+            router.replace('/');
+          } catch (error) {
+            console.error('Error during logout:', error);
+          }
+        },
+        style: 'destructive',
+      },
+    ]);
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -105,13 +131,20 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Overview</Text>
+          <Text style={styles.subtitle}>Your spending and budgets at a glance.</Text>
+        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+          <LogOut size={20} color="#d32f2f" />
+        </TouchableOpacity>
+      </View>
       <ScrollView 
         style={styles.container} 
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <Text style={styles.title}>Overview</Text>
-        <Text style={styles.subtitle}>Your spending and budgets at a glance.</Text>
 
         {error && (
           <View style={styles.errorCard}>
@@ -269,6 +302,20 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  logoutBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#ffebee',
   },
   container: {
     flex: 1,

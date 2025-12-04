@@ -12,6 +12,8 @@ model budgets {
   total_amount     Decimal @db.Decimal(10, 2)
   allocated_budget Json?   @db.Json
   alerts           Json?   @db.Json
+  budget_name      String? @db.VarChar(100)
+  ai_period        String? @db.VarChar(20)
   users            users   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 

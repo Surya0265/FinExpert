@@ -1,7 +1,32 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const prisma = require('../prismaClient');
 require('dotenv').config();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// Circular API key rotation from environment variables
+const GEMINI_API_KEYS = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+    process.env.GEMINI_API_KEY_4,
+].filter(key => key && key.trim() !== ''); // Filter out empty keys
+
+if (GEMINI_API_KEYS.length === 0) {
+    throw new Error('No Gemini API keys found in environment variables.');
+}
+
+console.log(`[Initialization] Loaded ${GEMINI_API_KEYS.length} Gemini API key(s)`);
+
+let currentKeyIndex = 0;
+
+const getGeminiAI = () => {
+    const apiKey = GEMINI_API_KEYS[currentKeyIndex];
+    return new GoogleGenerativeAI(apiKey);
+};
+
+const rotateAPIKey = () => {
+    currentKeyIndex = (currentKeyIndex + 1) % GEMINI_API_KEYS.length;
+    console.log(`[API Key Rotation] Switched to key index: ${currentKeyIndex} (${GEMINI_API_KEYS.length} total keys)`);
+};
 
 const summarizeExpenses = (expenses) => {
     const summary = {};
@@ -13,21 +38,18 @@ const summarizeExpenses = (expenses) => {
 };
 
 const generateAdvicePrompt = (spendingData, period) => {
-    return `Hey there! 😊 I've got some spending data for the last ${period}, and I need some friendly financial advice! 
+    return `I have some spending data for the last ${period}, and I need financial advice.
 
-    **Here’s the spending breakdown:** 
-    ${JSON.stringify(spendingData, null, 2)}
+Here is the spending breakdown: 
+${JSON.stringify(spendingData, null, 2)}
 
-    analyze this and provide **engaging, structured financial advice** like a supportive friend? 
-   --**dont say lets chat about
-    - **Encourage smart budgeting** 💰 
-    - **Point out areas of overspending** 🚨 
-    - **Suggest practical ways to save** 🛠️ 
-    - **Keep it fun, conversational & insightful** 😃
-    - **Use emojis to make it engaging** 🎉 
-    -**keep it conise
+Please analyze this and provide structured financial advice:
+- Point out areas of overspending
+- Suggest practical ways to save
+- Provide actionable recommendations based on spending trends
+- Keep it concise and professional
 
-    The response should feel like a friendly money-savvy friend helping me make better choices. Avoid generic tips—base it on my spending trends! 🚀 Thanks!`;
+Avoid using emojis.`;
 };
 
 const roundToTwo = (value) => {
@@ -151,28 +173,15 @@ exports.setBudget = async (req, res) => {
             }
         }
 
-        const existingBudget = await prisma.budgets.findFirst({ where: { user_id: userId } });
-
-        let budgetRecord;
-        if (existingBudget) {
-            budgetRecord = await prisma.budgets.update({
-                where: { budget_id: existingBudget.budget_id },
-                data: {
-                    total_amount: normalizedTotalAmount,
-                    allocated_budget: allocatedBudget,
-                    ...(sanitizedBudgetName ? { budget_name: sanitizedBudgetName } : {}),
-                }
-            });
-        } else {
-            budgetRecord = await prisma.budgets.create({
-                data: {
-                    user_id: userId,
-                    total_amount: normalizedTotalAmount,
-                    allocated_budget: allocatedBudget,
-                    ...(sanitizedBudgetName ? { budget_name: sanitizedBudgetName } : {}),
-                }
-            });
-        }
+        // Always create a new budget (don't update existing ones)
+        let budgetRecord = await prisma.budgets.create({
+            data: {
+                user_id: userId,
+                total_amount: normalizedTotalAmount,
+                allocated_budget: allocatedBudget,
+                ...(sanitizedBudgetName ? { budget_name: sanitizedBudgetName } : {}),
+            }
+        });
 
         res.json({
             message: "Budget set successfully",
@@ -311,7 +320,7 @@ exports.getBudgetAdvice = async (req, res) => {
 exports.getAIBudgetAllocation = async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const { totalBudget, categories } = req.body;
+        const { totalBudget, categories, period = '3months' } = req.body;
 
         const numericBudget = roundToTwo(totalBudget);
         if (!numericBudget || numericBudget <= 0) {
@@ -330,8 +339,16 @@ exports.getAIBudgetAllocation = async (req, res) => {
             return res.status(400).json({ message: 'Provided categories are invalid.' });
         }
 
+        // Determine date range based on period
         const startDate = new Date();
-        startDate.setMonth(startDate.getMonth() - 3);
+        const periodMap = {
+            '1month': 1,
+            '3months': 3,
+            '6months': 6,
+            '1year': 12
+        };
+        const monthsToSubtract = periodMap[period] || 3;
+        startDate.setMonth(startDate.getMonth() - monthsToSubtract);
 
         const expenses = await prisma.expenses.findMany({
             where: { user_id: userId, date: { gte: startDate } },
@@ -339,9 +356,10 @@ exports.getAIBudgetAllocation = async (req, res) => {
         });
 
         const spendingSummary = summarizeExpenses(expenses);
+        const periodLabel = { '1month': 'last month', '3months': 'last 3 months', '6months': 'last 6 months', '1year': 'last year' }[period] || 'last 3 months';
 
         const prompt = `You are a sharp financial planning assistant. Allocate a budget of ₹${numericBudget.toFixed(2)} across these categories: ${JSON.stringify(sanitizedCategories)}.
-User's recent three-month spending summary (₹): ${JSON.stringify(spendingSummary)}.
+User's ${periodLabel} spending summary (₹): ${JSON.stringify(spendingSummary)}.
 Return only valid JSON in the format { "allocation": { "Category": amount } } with amounts summing exactly to ${numericBudget.toFixed(2)} and each amount having two decimals. No additional text.`;
 
         let aiResponse;
@@ -412,12 +430,15 @@ exports.deleteBudget = async (req, res) => {
     }
 };
 
-const callGeminiAI = async (prompt) => {
+const callGeminiAI = async (prompt, retryCount = 0) => {
+    const maxRetries = GEMINI_API_KEYS.length * 3; // Try each key up to 3 times
+
     try {
+        const genAI = getGeminiAI();
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await model.generateContent({ contents: [{ role: "user", parts: [{ text: prompt }] }] });
 
-        console.log("Gemini API Raw Response:", JSON.stringify(result, null, 2)); // Debugging
+        console.log(`[API Key ${currentKeyIndex}] Gemini API Response:`, JSON.stringify(result, null, 2)); // Debugging
 
         if (!result || !result.response || !result.response.candidates || result.response.candidates.length === 0) {
             return "No AI insights available.";
@@ -433,8 +454,27 @@ const callGeminiAI = async (prompt) => {
 
         return "No AI insights available.";
     } catch (error) {
-        console.error("Gemini AI Error:", error.response?.data || error.message);
-        return "Unable to fetch AI insights at this time.";
+        console.error(`[API Key ${currentKeyIndex}] Gemini API Error:`, error.message);
+
+        // Check for rate limiting (429) or authentication errors
+        const isRateLimited = error.status === 429 || error.message.includes('429') || error.message.includes('Too Many Requests');
+        const isAuthError = error.message.includes('API') || 
+                           error.message.includes('404') || 
+                           error.message.includes('unauthorized') ||
+                           error.message.includes('invalid') ||
+                           error.message.includes('UNAUTHENTICATED');
+
+        // If rate limited or auth error and we have retries left, try next key
+        if (retryCount < maxRetries && (isRateLimited || isAuthError)) {
+            console.log(`[API Key Rotation] Rate limited or auth error. Switching to next API key (retry ${retryCount + 1}/${maxRetries})`);
+            rotateAPIKey();
+            // Add slight delay before retrying to avoid hammering the API
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return callGeminiAI(prompt, retryCount + 1);
+        }
+
+        console.error("All API keys exhausted or fatal error occurred.");
+        throw error;
     }
 };
 

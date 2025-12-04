@@ -18,6 +18,7 @@ interface BudgetData {
   total_amount: number;
   manual_allocations: Record<string, number>;
   allocated_budget?: Record<string, number>;
+  ai_period?: string;
 }
 
 interface SpendingStats {
@@ -35,6 +36,8 @@ export default function BudgetsScreen() {
   const [budgetName, setBudgetName] = useState('');
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [categoryInput, setCategoryInput] = useState('');
+  const [aiPeriod, setAiPeriod] = useState('3months'); // 1month, 3months, 6months, 1year
+  const [aiConversation, setAiConversation] = useState<Array<{ role: 'user' | 'ai'; message: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null);
   const [allBudgets, setAllBudgets] = useState<BudgetData[]>([]);
@@ -224,16 +227,117 @@ export default function BudgetsScreen() {
 
     try {
       setLoading(true);
+      
+      // Start AI conversation with two questions
+      const initialMessage = `I will help you allocate your ₹${totalBudget} budget across ${categories.length} categories: ${categories.map(c => c.name).join(', ')}.
 
-      // Call AI service to get allocation
+To give you the best allocation, I need to analyze your spending patterns.
+
+Question 1: How far back would you like me to look at your spending history?
+
+Options:
+- 1 Month
+- 3 Months
+- 6 Months
+- 1 Year`;
+
+      setAiConversation([{ role: 'ai', message: initialMessage }]);
+      setShowAIAllocations(true);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to start AI allocation',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePeriodSelection = async (period: string) => {
+    try {
+      setLoading(true);
+      
+      // Add user response to conversation
+      const periodLabels: Record<string, string> = {
+        '1month': '1 Month',
+        '3months': '3 Months',
+        '6months': '6 Months',
+        '1year': '1 Year'
+      };
+      
+      const newConversation = [...aiConversation, { role: 'user', message: periodLabels[period] }];
+      setAiConversation(newConversation);
+
+      // Ask second question about budget period
+      const secondQuestion = `Good choice. Now, what time period should this budget cover?
+
+Options:
+- Weekly
+- Monthly
+- Quarterly
+- Yearly`;
+
+      const conversationWithQuestion = [...newConversation, { role: 'ai', message: secondQuestion }];
+      setAiConversation(conversationWithQuestion);
+      setAiPeriod(period);
+
+    } catch (error: any) {
+      const errorMsg = error.message || 'Failed to process selection';
+      
+      setAiConversation([...aiConversation, { role: 'ai', message: `Error: ${errorMsg}` }]);
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: errorMsg,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBudgetPeriodSelection = async (budgetPeriod: string) => {
+    try {
+      setLoading(true);
+      
+      const budgetPeriodLabels: Record<string, string> = {
+        'week': 'Week',
+        'month': 'Month',
+        '3month': '3-Month',
+        'year': 'Year'
+      };
+      
+      // Add user response to conversation
+      const newConversation = [...aiConversation, { role: 'user', message: budgetPeriodLabels[budgetPeriod] }];
+      setAiConversation(newConversation);
+
+      // Show loading message while processing
+      const loadingConversation = [...newConversation, { role: 'ai', message: 'Processing your allocation... Please wait.' }];
+      setAiConversation(loadingConversation);
+
+      // Now call AI service with both periods
       const response = await budgetService.getAIBudgetAllocation({
         totalBudget: parseFloat(totalBudget),
         categories: categories.map(c => c.name),
+        period: aiPeriod,
       });
 
-      // Store AI allocations and show them for review
-      setAiAllocations(response.allocation);
-      
+      // Build allocation summary without emojis
+      const allocationSummary = Object.entries(response.allocation)
+        .map(([cat, amount]) => `${cat}: Rs ${amount}`)
+        .join(', ');
+
+      const aiResponse = `Based on your ${budgetPeriodLabels[budgetPeriod].toLowerCase()} budget and spending analysis, here is your allocation:
+
+${allocationSummary}
+
+Total allocated: Rs ${parseFloat(totalBudget).toFixed(2)}
+
+You can now review and adjust these amounts below, then save your budget.`;
+
+      setAiConversation([...newConversation, { role: 'ai', message: aiResponse }]);
+
       // Update categories with AI-generated allocations
       const updatedCategories = categories.map(cat => ({
         ...cat,
@@ -241,19 +345,27 @@ export default function BudgetsScreen() {
       }));
 
       setCategories(updatedCategories);
-      setShowAIAllocations(true);
 
       Toast.show({
         type: 'success',
         text1: 'Success',
-        text2: 'AI has allocated your budget. Review and save below.',
+        text2: 'AI allocation generated. Review below.',
       });
     } catch (error: any) {
       const apiMessage = error?.response?.data?.message;
+      const errorMsg = apiMessage || error.message || 'AI service is processing. Please try again.';
+      
+      // Don't show error to user, just log and remove loading message
+      console.error('AI Allocation Error:', errorMsg);
+      
+      // Remove the loading message
+      const updatedConversation = aiConversation.filter((msg, idx) => idx !== aiConversation.length - 1);
+      setAiConversation(updatedConversation);
+      
       Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: apiMessage || error.message || 'Failed to generate allocation',
+        type: 'info',
+        text1: 'Retrying',
+        text2: 'AI is retrying with different keys. Please wait...',
       });
     } finally {
       setLoading(false);
@@ -338,11 +450,7 @@ export default function BudgetsScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Budget Planner</Text>
-          {budgetData && (
-            <Text style={styles.subtitle}>
-              Current Budget ({budgetData.budget_name ?? 'Budget'}): ₹{Number(budgetData.total_amount || 0).toFixed(2)}
-            </Text>
-          )}
+          
         </View>
 
         {/* SECTION 1: Budget Type Options */}
@@ -591,7 +699,7 @@ export default function BudgetsScreen() {
               )}
             </View>
 
-            {categories.length > 0 && !showAIAllocations && (
+            {categories.length > 0 && !showAIAllocations && mode === 'ai' && (
               <>
                 <View style={styles.divider} />
                 <TouchableOpacity
@@ -606,9 +714,74 @@ export default function BudgetsScreen() {
                   {loading ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.buttonText}>Generate AI Allocation</Text>
+                    <Text style={styles.buttonText}>🤖 Ask AI for Budget</Text>
                   )}
                 </TouchableOpacity>
+              </>
+            )}
+
+            {showAIAllocations && mode === 'ai' && aiConversation.length > 0 && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.aiChatContainer}>
+                  <Text style={styles.sectionTitle}>💬 AI Budget Assistant</Text>
+                  
+                  {aiConversation.map((msg, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.chatMessage,
+                        msg.role === 'ai' ? styles.aiMessage : styles.userMessage,
+                      ]}
+                    >
+                      <Text style={[styles.chatText, msg.role === 'ai' && styles.aiMessageText]}>
+                        {msg.message}
+                      </Text>
+                    </View>
+                  ))}
+
+                  {aiConversation.length > 0 && aiConversation[aiConversation.length - 1].role === 'ai' && 
+                   aiConversation[aiConversation.length - 1].message.includes('far back') && (
+                    <View style={styles.periodButtonsContainer}>
+                      {[
+                        { label: '1 Month', value: '1month' },
+                        { label: '3 Months', value: '3months' },
+                        { label: '6 Months', value: '6months' },
+                        { label: '1 Year', value: '1year' },
+                      ].map((period) => (
+                        <TouchableOpacity
+                          key={period.value}
+                          style={styles.periodButton}
+                          onPress={() => handlePeriodSelection(period.value)}
+                          disabled={loading}
+                        >
+                          <Text style={styles.periodButtonText}>{period.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+
+                  {aiConversation.length > 0 && aiConversation[aiConversation.length - 1].role === 'ai' && 
+                   aiConversation[aiConversation.length - 1].message.includes('time period') && (
+                    <View style={styles.periodButtonsContainer}>
+                      {[
+                        { label: 'Week', value: 'week' },
+                        { label: 'Month', value: 'month' },
+                        { label: '3-Month', value: '3month' },
+                        { label: 'Year', value: 'year' },
+                      ].map((period) => (
+                        <TouchableOpacity
+                          key={period.value}
+                          style={styles.periodButton}
+                          onPress={() => handleBudgetPeriodSelection(period.value)}
+                          disabled={loading}
+                        >
+                          <Text style={styles.periodButtonText}>{period.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
               </>
             )}
 
@@ -687,68 +860,21 @@ export default function BudgetsScreen() {
           </View>
         )}
 
-        {/* SECTION 3: Spending Breakdown (always at bottom) */}
-        {budgetData && Object.keys(spendingStats).length > 0 && (
-          <View style={styles.spendingCard}>
-            <View style={styles.spendingHeader}>
-              <TrendingUp color="#1b5e20" size={20} />
-              <Text style={styles.spendingTitle}>Spending Breakdown</Text>
+        {/* SECTION 3: All Budgets List - Main Budget Display */}
+        {allBudgets && allBudgets.length > 0 && (
+          <View style={styles.allBudgetsContainer}>
+            <View style={styles.allBudgetsHeader}>
+              <TrendingUp color="#1b5e20" size={22} />
+              <Text style={styles.allBudgetsMainTitle}>Your Budgets</Text>
             </View>
             
-            {Object.entries(spendingStats).map(([category, stats]) => (
-              <View key={category} style={styles.categorySpendingItem}>
-                <View style={styles.categorySpendingHeader}>
-                  <Text style={styles.categorySpendingName}>{category}</Text>
-                  <Text style={[
-                    styles.categorySpendingPercent,
-                    stats.spent > stats.allocated && styles.overBudgetText
-                  ]}>
-                    {stats.percentage.toFixed(0)}%
-                  </Text>
-                </View>
-                
-                {/* Progress Bar */}
-                <View style={styles.progressBarContainer}>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      {
-                        width: `${Math.min(stats.percentage, 100)}%`,
-                        backgroundColor: stats.spent > stats.allocated ? '#e91e63' : '#4caf50',
-                      },
-                    ]}
-                  />
-                </View>
-                
-                <View style={styles.categorySpendingDetails}>
-                  <Text style={styles.spendingRatio}>
-                    ₹{stats.spent.toFixed(2)} / ₹{stats.allocated.toFixed(2)}
-                  </Text>
-                  <Text style={[
-                    styles.spendingText,
-                    stats.spent > stats.allocated && styles.remainingOverBudget
-                  ]}>
-                    Remaining: <Text style={styles.spendingAmount}>
-                      ₹{Math.max(stats.remaining, 0).toFixed(2)}
-                    </Text>
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* All Budgets List */}
-        {allBudgets && allBudgets.length > 0 && (
-          <View style={styles.allBudgetsCard}>
-            <Text style={styles.allBudgetsTitle}>All Budgets</Text>
             {allBudgets.map((budget, index) => (
-              <View key={`${budget.budget_id ?? budget.budget_name}-${index}`} style={styles.budgetListItem}>
-                <View style={styles.budgetListHeader}>
-                  <View style={styles.budgetListInfo}>
-                    <Text style={styles.budgetListName}>{budget.budget_name}</Text>
-                    <Text style={styles.budgetListAmount}>
-                      ₹{Number(budget.total_amount || 0).toFixed(2)}
+              <View key={`${budget.budget_id ?? budget.budget_name}-${index}`} style={styles.budgetCard}>
+                <View style={styles.budgetCardHeader}>
+                  <View style={styles.budgetCardInfo}>
+                    <Text style={styles.budgetCardName}>{budget.budget_name}</Text>
+                    <Text style={styles.budgetCardTotal}>
+                      Total: ₹{Number(budget.total_amount || 0).toFixed(2)}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -758,7 +884,7 @@ export default function BudgetsScreen() {
                       }
                       deleteBudget(budget.budget_id);
                     }}
-                    style={styles.deleteButton}
+                    style={styles.budgetDeleteButton}
                     disabled={!budget.budget_id}
                   >
                     <X color="#e91e63" size={20} />
@@ -766,21 +892,54 @@ export default function BudgetsScreen() {
                 </View>
 
                 {budget.allocated_budget && Object.keys(budget.allocated_budget).length > 0 && (
-                  <View style={styles.budgetCategoryList}>
+                  <View style={styles.budgetBreakdown}>
+                    <Text style={styles.breakdownTitle}>Category Allocation</Text>
                     {Object.entries(budget.allocated_budget).map(([category, value]) => {
                       const allocationNumber = typeof value === 'number' ? value : parseFloat(String(value));
                       const allocated = Number.isFinite(allocationNumber) ? parseFloat(allocationNumber.toFixed(2)) : 0;
+                      
+                      // Get spending for this category
                       const categoryStats = spendingStats[category];
                       const spent = categoryStats ? categoryStats.spent : 0;
-                      const percentage = categoryStats ? categoryStats.percentage : (allocated > 0 ? Math.min((spent / allocated) * 100, 999) : 0);
+                      const percentage = allocated > 0 ? (spent / allocated) * 100 : spent > 0 ? 100 : 0;
+                      const remaining = Math.max(allocated - spent, 0);
                       const overBudget = spent > allocated;
 
                       return (
-                        <View key={`${budget.budget_id ?? budget.budget_name}-${category}`} style={styles.budgetCategoryRow}>
-                          <Text style={styles.budgetCategoryName}>{category}</Text>
-                          <Text style={[styles.budgetCategoryAmount, overBudget && styles.overBudgetText]}>
-                            ₹{spent.toFixed(2)} / ₹{allocated.toFixed(2)} ({percentage.toFixed(0)}%)
-                          </Text>
+                        <View key={`${budget.budget_id ?? budget.budget_name}-${category}`} style={styles.categoryBreakdownItem}>
+                          <View style={styles.categoryBreakdownHeader}>
+                            <Text style={styles.categoryBreakdownName}>{category}</Text>
+                            <Text style={[
+                              styles.categoryBreakdownPercent,
+                              overBudget && styles.categoryOverBudget
+                            ]}>
+                              {percentage.toFixed(0)}%
+                            </Text>
+                          </View>
+                          
+                          <View style={styles.categoryBreakdownProgress}>
+                            <View
+                              style={[
+                                styles.categoryBreakdownFill,
+                                {
+                                  width: `${Math.min(percentage, 100)}%`,
+                                  backgroundColor: overBudget ? '#e91e63' : '#4caf50',
+                                },
+                              ]}
+                            />
+                          </View>
+                          
+                          <View style={styles.categoryBreakdownStats}>
+                            <Text style={styles.categoryBreakdownSpent}>
+                              ₹{spent.toFixed(2)} / ₹{allocated.toFixed(2)}
+                            </Text>
+                            <Text style={[
+                              styles.categoryBreakdownRemaining,
+                              overBudget && styles.categoryOverBudget
+                            ]}>
+                              Remaining: ₹{remaining.toFixed(2)}
+                            </Text>
+                          </View>
                         </View>
                       );
                     })}
@@ -1057,6 +1216,87 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     marginVertical: 16,
   },
+  aiChatContainer: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+  },
+  chatMessage: {
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    maxWidth: '95%',
+  },
+  aiMessage: {
+    backgroundColor: '#e8f5e9',
+    borderLeftWidth: 3,
+    borderLeftColor: '#2e7d32',
+    alignSelf: 'flex-start',
+  },
+  userMessage: {
+    backgroundColor: '#2e7d32',
+    alignSelf: 'flex-end',
+  },
+  chatText: {
+    fontSize: 12,
+    fontFamily: 'PoppinsRegular',
+    color: '#263238',
+    lineHeight: 18,
+  },
+  aiMessageText: {
+    color: '#1b5e20',
+  },
+  periodButtonsContainer: {
+    marginTop: 12,
+    gap: 8,
+  },
+  periodButton: {
+    backgroundColor: '#2e7d32',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  periodButtonText: {
+    color: '#fff',
+    fontFamily: 'PoppinsSemiBold',
+    fontSize: 13,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  periodOption: {
+    flex: 1,
+    minWidth: '45%',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  periodOptionActive: {
+    borderColor: '#2e7d32',
+    backgroundColor: '#e8f5e9',
+  },
+  periodOptionText: {
+    fontSize: 12,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#757575',
+  },
+  periodOptionTextActive: {
+    color: '#1b5e20',
+  },
   amountInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1231,67 +1471,161 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  allBudgetsCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  allBudgetsContainer: {
+    marginTop: 24,
   },
-  allBudgetsTitle: {
-    fontSize: 16,
-    fontFamily: 'PoppinsSemiBold',
+  allBudgetsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  allBudgetsMainTitle: {
+    fontSize: 20,
+    fontFamily: 'PoppinsBold',
     color: '#1b5e20',
-    marginBottom: 12,
   },
-  budgetListItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    marginBottom: 12,
+  budgetCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2e7d32',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  budgetListHeader: {
+  budgetCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  budgetListInfo: {
+  budgetCardInfo: {
     flex: 1,
   },
-  budgetListName: {
-    fontSize: 14,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#424242',
+  budgetCardName: {
+    fontSize: 15,
+    fontFamily: 'PoppinsBold',
+    color: '#1b5e20',
     marginBottom: 4,
   },
-  budgetListAmount: {
+  budgetCardTotal: {
+    fontSize: 13,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#2e7d32',
+  },
+  budgetDeleteButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#ffebee',
+  },
+  budgetBreakdown: {
+    borderTopWidth: 1,
+    borderTopColor: '#e8f5e9',
+    paddingTop: 12,
+  },
+  breakdownTitle: {
     fontSize: 12,
-    fontFamily: 'PoppinsRegular',
-    color: '#1b5e20',
+    fontFamily: 'PoppinsSemiBold',
+    color: '#757575',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  budgetCategoryList: {
-    marginTop: 4,
+  categoryBreakdownItem: {
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  budgetCategoryRow: {
+  categoryBreakdownHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
   },
+  categoryBreakdownName: {
+    fontSize: 13,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#424242',
+  },
+  categoryBreakdownPercent: {
+    fontSize: 12,
+    fontFamily: 'PoppinsBold',
+    color: '#4caf50',
+    backgroundColor: '#e8f5e9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  categoryOverBudget: {
+    color: '#e91e63',
+    backgroundColor: '#ffebee',
+  },
+  categoryBreakdownProgress: {
+    height: 7,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 3.5,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  categoryBreakdownFill: {
+    height: '100%',
+    borderRadius: 3.5,
+  },
+  categoryBreakdownStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoryBreakdownSpent: {
+    fontSize: 11,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#424242',
+  },
+  categoryBreakdownRemaining: {
+    fontSize: 11,
+    fontFamily: 'PoppinsRegular',
+    color: '#757575',
+  },
+  budgetCategoryList: {
+    marginTop: 4,
+  },
+  budgetCategoryRow: {
+    marginBottom: 12,
+  },
+  budgetCategoryContent: {
+    gap: 4,
+  },
   budgetCategoryName: {
     fontSize: 13,
-    fontFamily: 'PoppinsRegular',
+    fontFamily: 'PoppinsSemiBold',
     color: '#424242',
   },
   budgetCategoryAmount: {
     fontSize: 12,
     fontFamily: 'PoppinsSemiBold',
     color: '#2e7d32',
+  },
+  budgetProgressBar: {
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginVertical: 4,
+  },
+  budgetProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  budgetRemainingText: {
+    fontSize: 11,
+    fontFamily: 'PoppinsRegular',
+    color: '#757575',
   },
   deleteButton: {
     padding: 8,
