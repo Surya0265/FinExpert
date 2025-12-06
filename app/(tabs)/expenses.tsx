@@ -10,7 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Trash2 } from 'lucide-react-native';
+import { Trash2, Receipt } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { expenseService, Expense, AddExpenseData } from '../../services/expenseService';
 import Toast from 'react-native-toast-message';
 
@@ -93,18 +94,33 @@ export default function ExpensesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Expenses</Text>
-      </View>
-
+    <View style={styles.mainContainer}>
       <FlatList
+        ListHeaderComponent={
+          <LinearGradient
+            colors={['#4830D3', '#7C4DFF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.headerGradient, { marginBottom: 16 }]}
+          >
+            <SafeAreaView edges={['top']} style={styles.safeHeader}>
+              <View style={styles.headerTop}>
+                <View>
+                  <Text style={styles.headerTitle}>Expenses</Text>
+                  <Text style={styles.headerSubtitle}>Track your daily spending</Text>
+                </View>
+                <View style={styles.iconContainer}>
+                  <Receipt size={24} color="#ffffff" />
+                </View>
+              </View>
+            </SafeAreaView>
+          </LinearGradient>
+        }
         data={expenses}
         keyExtractor={(item) => item.expense_id.toString()}
         onRefresh={loadExpenses}
         refreshing={loading}
-        contentContainerStyle={expenses.length ? undefined : styles.emptyContainer}
+        contentContainerStyle={expenses.length ? { paddingBottom: 150 } : styles.emptyContainer}
         renderItem={({ item }) => {
           const amount = typeof item.amount === 'number' ? item.amount : Number(item.amount) || 0;
           const dateLabel = item.date ? new Date(item.date).toDateString() : 'No date';
@@ -166,37 +182,68 @@ export default function ExpensesScreen() {
           </View>
         </View>
       </Modal>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F4F6F8',
+  },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  safeHeader: {
+    paddingTop: 5,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
   },
   container: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
-  },
   itemWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
     gap: 10,
+    marginHorizontal: 16,
   },
   item: {
     flex: 1,
@@ -206,10 +253,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#5B4DBC',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   itemLeft: {
     flex: 1,
@@ -231,10 +280,10 @@ const styles = StyleSheet.create({
   itemAmount: {
     fontFamily: 'PoppinsSemiBold',
     fontSize: 14,
-    color: '#2e7d32',
+    color: '#5B4DBC',
   },
   deleteButton: {
-    backgroundColor: '#d32f2f',
+    backgroundColor: '#FF9F43',
     borderRadius: 12,
     padding: 10,
     justifyContent: 'center',
@@ -311,7 +360,7 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   saveButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
@@ -325,7 +374,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 100,
     right: 20,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     borderRadius: 28,
     paddingVertical: 14,
     paddingHorizontal: 20,

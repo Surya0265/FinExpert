@@ -7,25 +7,21 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2e7d32',
+        tabBarActiveTintColor: '#5B4DBC',
         tabBarInactiveTintColor: '#9e9e9e',
         tabBarStyle: {
-          position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: Platform.OS === 'ios' ? 56 : 40,
           backgroundColor: '#ffffff',
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: '#e0e0e0',
-          borderTopWidth: 1,
-          elevation: 0,
-          height: 64,
-          paddingBottom: Platform.OS === 'ios' ? 14 : 10,
-          paddingTop: 6,
+          borderTopWidth: 0,
+          elevation: 8,
+          height: 102,
+          paddingBottom: Platform.OS === 'ios' ? 75 : 67,
+          paddingTop: 8,
+          borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
         },
         tabBarLabelStyle: {
           fontSize: 11,
+          fontFamily: 'PoppinsSemiBold',
         },
       }}
     >

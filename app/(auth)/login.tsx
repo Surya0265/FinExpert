@@ -45,7 +45,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={['#1b5e20', '#2e7d32']} style={styles.container}>
+    <LinearGradient colors={['#4830D3', '#7C4DFF']} style={styles.container}>
       <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.inner}
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontFamily: 'PoppinsRegular',
-    color: '#e0f2f1',
+    color: '#EDE7F6',
     marginTop: 4,
   },
   card: {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'PoppinsSemiBold',
     marginBottom: 20,
-    color: '#1b5e20',
+    color: '#4830D3',
   },
   label: {
     fontSize: 12,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   button: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   linkText: {
     fontFamily: 'PoppinsSemiBold',
     fontSize: 12,
-    color: '#2e7d32',
+    color: '#5B4DBC',
   },
 });
 

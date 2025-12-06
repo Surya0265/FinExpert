@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { expenseService, ChartData } from '../../services/expenseService';
 import { budgetService, AlertsResponse } from '../../services/budgetService';
 import { BarChart, PieChart } from 'react-native-chart-kit';
-import { LogOut } from 'lucide-react-native';
+import { LogOut, ArrowUpRight, ArrowDownLeft, CreditCard, Bell, UserCircle, TrendingUp, Wallet } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const screenWidth = Dimensions.get('window').width - 32;
 
@@ -119,34 +120,61 @@ export default function DashboardScreen() {
   const totalByCategory = categoryData.reduce((sum, item) => sum + (item.amount || 0), 0);
   const maxAmount = Math.max(...periodData.map((d) => d.amount || 0), 1);
 
-  // Improved chart config with better scaling
+  // Improved chart config with better scaling and darker colors
   const improvedChartConfig = {
     backgroundGradientFrom: '#ffffff',
     backgroundGradientTo: '#ffffff',
-    color: (opacity = 1) => `rgba(27, 94, 32, ${opacity})`,
+    color: (opacity = 1) => `rgba(40, 30, 130, ${opacity})`, // Darker blue
     barPercentage: 0.7,
     labelColor: (opacity = 1) => `rgba(66, 66, 66, ${opacity})`,
     decimalPlaces: 0,
+    propsForBackgroundLines: {
+      strokeDasharray: '5',
+      stroke: '#f0f0f0',
+    },
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Overview</Text>
-          <Text style={styles.subtitle}>Your spending and budgets at a glance.</Text>
-        </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-          <LogOut size={20} color="#d32f2f" />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.mainContainer}>
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5B4DBC" />}
+        showsVerticalScrollIndicator={false}
       >
+        <LinearGradient
+          colors={['#4830D3', '#7C4DFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={['top']} style={styles.safeHeader}>
+            <View style={styles.headerTop}>
+              <Text style={styles.headerSubtitle}>Welcome back!</Text>
+              <View style={styles.headerLeft}>
+                <Wallet size={28} color="#ffffff" />
+                <Text style={styles.headerAppTitle}>FinExpert</Text>
+              </View>
+            </View>
+            <View style={styles.headerBottom}>
+              <Text style={styles.headerUsername}>User</Text>
+            </View>
 
-        {error && (
+            <View style={styles.balanceCard}>
+              <View style={styles.balanceHeader}>
+                <Text style={styles.balanceLabel}>Total Spent (Week)</Text>
+                <View style={styles.trendBadge}>
+                  <TrendingUp size={14} color="#4CAF50" />
+                  <Text style={styles.trendText}>+2.5%</Text>
+                </View>
+              </View>
+              <Text style={styles.balanceAmount}>₹{totalSpent.toFixed(2)}</Text>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+
+        <View style={styles.contentBody}>
+          {error && (
           <View style={styles.errorCard}>
             <Text style={styles.errorText}>⚠️ {error}</Text>
           </View>
@@ -154,65 +182,14 @@ export default function DashboardScreen() {
 
         {loading ? (
           <View style={styles.loader}>
-            <ActivityIndicator size="large" color="#2e7d32" />
+            <ActivityIndicator size="large" color="#5B4DBC" />
           </View>
         ) : (
           <>
-            {/* Summary Cards */}
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Weekly</Text>
-                <Text style={styles.summaryAmount}>₹{totalSpent.toFixed(2)}</Text>
-              </View>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>By Category</Text>
-                <Text style={styles.summaryAmount}>₹{totalByCategory.toFixed(2)}</Text>
-              </View>
-            </View>
+            {/* Quick Actions / Cards */}
+            {/* Cards section removed as requested */}
 
-            {/* Bar Chart - Weekly Spending */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Weekly Spending Trend</Text>
-              {periodData.length > 0 && periodData.some((item) => item.amount > 0) ? (
-                <>
-                  <View style={styles.barChartWrapper}>
-                    <BarChart
-                      data={chartData}
-                      width={screenWidth}
-                      height={220}
-                      chartConfig={improvedChartConfig}
-                      style={styles.chart}
-                      verticalLabelRotation={45}
-                      showValuesOnTopOfBars={true}
-                      fromZero={true}
-                      withVerticalLabels={true}
-                      withHorizontalLabels={true}
-                      segments={5}
-                      withInnerLines={true}
-                    />
-                  </View>
-                  <View style={styles.chartStats}>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>Total</Text>
-                      <Text style={styles.statValue}>₹{totalSpent.toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>Average</Text>
-                      <Text style={styles.statValue}>₹{(totalSpent / Math.max(periodData.length, 1)).toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>Highest</Text>
-                      <Text style={styles.statValue}>₹{maxAmount.toFixed(0)}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.chartNote}>Last 7 days spending</Text>
-                </>
-              ) : (
-                <Text style={styles.emptyText}>No expenses recorded yet.</Text>
-              )}
-            </View>
-
-            {/* Pie Chart - Category Distribution */}
+            {/* Pie Chart - Category Distribution (First) */}
             <View style={styles.card}>
               <View style={styles.categoryHeader}>
                 <Text style={styles.cardTitle}>Spending by Category</Text>
@@ -222,158 +199,369 @@ export default function DashboardScreen() {
                 <>
                   <PieChart
                     data={pieData}
-                    width={screenWidth}
+                    width={screenWidth - 48}
                     height={220}
                     accessor="amount"
                     backgroundColor="#ffffff"
                     paddingLeft="0"
                     chartConfig={chartConfig}
+                    center={[10, 0]}
+                    absolute
                   />
-                  <View style={styles.categoryLegend}>
-                    {categoryData
-                      .filter((c) => c.amount > 0)
-                      .map((c, index) => (
-                        <View key={index} style={styles.legendRow}>
-                          <View
-                            style={[
-                              styles.colorDot,
-                              { backgroundColor: PIE_COLORS[index % PIE_COLORS.length] },
-                            ]}
-                          />
-                          <Text style={styles.legendText}>
-                            {c.category}: ₹{c.amount.toFixed(2)} (
-                            {((c.amount / totalByCategory) * 100).toFixed(1)}%)
-                          </Text>
-                        </View>
-                      ))}
-                  </View>
                 </>
               ) : (
                 <Text style={styles.emptyText}>No category data available.</Text>
               )}
             </View>
 
+            {/* Bar Chart - Weekly Spending (Second) */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Weekly Spending Trend</Text>
+              {periodData.length > 0 && periodData.some((item) => item.amount > 0) ? (
+                <>
+                  <View style={styles.barChartWrapper}>
+                    <BarChart
+                      data={chartData}
+                      width={screenWidth - 48}
+                      height={220}
+                      chartConfig={improvedChartConfig}
+                      style={styles.chart}
+                      verticalLabelRotation={0}
+                      showValuesOnTopOfBars={true}
+                      fromZero={true}
+                      withVerticalLabels={true}
+                      withHorizontalLabels={true}
+                      segments={4}
+                      withInnerLines={true}
+                      yAxisLabel="₹"
+                      yAxisSuffix=""
+                    />
+                  </View>
+                </>
+              ) : (
+                <Text style={styles.emptyText}>No expenses recorded yet.</Text>
+              )}
+            </View>
+
             {/* Budget Alerts */}
             {alerts && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Budget Alerts</Text>
+              <View style={[styles.card, styles.orangeCard]}>
+                <Text style={[styles.cardTitle, styles.orangeCardTitle]}>Budget Alerts</Text>
                 {Object.keys(alerts.alerts || {}).length > 0 ? (
                   Object.entries(alerts.alerts).map(([category, message]) => (
-                    <View key={category} style={styles.alertRow}>
-                      <Text style={styles.alertDot}>⚠️</Text>
+                    <View key={category} style={[styles.alertRow, styles.orangeAlertRow]}>
+                      <View style={[styles.alertIcon, styles.orangeAlertIcon]}>
+                        <Text>⚠️</Text>
+                      </View>
                       <View style={styles.alertContent}>
-                        <Text style={styles.alertCategory}>{category}</Text>
-                        <Text style={styles.alertMessage}>{message}</Text>
+                        <Text style={[styles.alertCategory, styles.orangeAlertCategory]}>{category}</Text>
+                        <Text style={[styles.alertMessage, styles.orangeAlertMessage]}>{message}</Text>
                       </View>
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.emptyText}>✓ No alerts right now. Keep it up!</Text>
+                  <Text style={[styles.emptyText, styles.orangeEmptyText]}>✓ No alerts right now. Keep it up!</Text>
                 )}
               </View>
             )}
           </>
         )}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const PIE_COLORS = ['#2e7d32', '#66bb6a', '#a5d6a7', '#ffb74d', '#ef5350', '#29b6f6', '#ab47bc', '#ff7043'];
+const PIE_COLORS = ['#5B4DBC', '#FF9F43', '#FF6B6B', '#4830D3', '#1DD1A1', '#54A0FF', '#5f27cd', '#ff9ff3'];
 
 const chartConfig = {
   backgroundGradientFrom: '#ffffff',
   backgroundGradientTo: '#ffffff',
-  color: (opacity = 1) => `rgba(46, 125, 50, ${opacity})`,
+  color: (opacity = 1) => `rgba(91, 77, 188, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(66, 66, 66, ${opacity})`,
   propsForDots: {
     r: '4',
     strokeWidth: '2',
-    stroke: '#2e7d32',
+    stroke: '#5B4DBC',
   },
   propsForBackgroundLines: {
-    strokeDasharray: '0',
-    stroke: '#e0e0e0',
+    strokeDasharray: '5',
+    stroke: '#f0f0f0',
     strokeWidth: 1,
   },
 };
 
 const styles = StyleSheet.create({
-  safe: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F4F6F8',
   },
-  header: {
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  safeHeader: {
+    paddingTop: 5,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    marginTop: 0,
+    marginBottom: 8,
   },
-  logoutBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#ffebee',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerAppTitle: {
+    fontSize: 18,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF5252',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+    lineHeight: 22,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  headerUsername: {
+    fontSize: 16,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+  },
+  headerBottom: {
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  balanceCard: {
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  balanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+    justifyContent: 'center',
+  },
+  trendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 12,
+    gap: 4,
+  },
+  trendText: {
+    fontSize: 10,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#2E7D32',
+  },
+  balanceLabel: {
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+  },
+  balanceAmount: {
+    fontSize: 36,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 12,
+    borderRadius: 16,
+    width: '48%',
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#ffffff',
   },
   container: {
     flex: 1,
   },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
+  scrollContent: {
+    paddingBottom: 150,
   },
-  title: {
-    fontSize: 24,
-    fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
+  contentBody: {
+    padding: 20,
   },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: 'PoppinsRegular',
-    color: '#616161',
-    marginBottom: 16,
-  },
-  summaryRow: {
+  sectionHeader: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+    marginTop: 8,
   },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: '#2e7d32',
-    borderRadius: 12,
-    padding: 16,
-    justifyContent: 'center',
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#263238',
   },
-  summaryLabel: {
-    fontSize: 11,
+  seeAll: {
+    fontSize: 14,
     fontFamily: 'PoppinsRegular',
-    color: '#ffffff',
-    opacity: 0.9,
-    marginBottom: 4,
+    color: '#5B4DBC',
   },
-  summaryAmount: {
+  cardsScroll: {
+    marginBottom: 24,
+    overflow: 'visible',
+  },
+  creditCard: {
+    width: 280,
+    height: 170,
+    borderRadius: 24,
+    padding: 24,
+    marginRight: 16,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardBank: {
     fontSize: 18,
     fontFamily: 'PoppinsSemiBold',
     color: '#ffffff',
   },
+  cardNumber: {
+    fontSize: 18,
+    fontFamily: 'PoppinsRegular',
+    color: '#ffffff',
+    letterSpacing: 2,
+    marginTop: 20,
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  cardLabel: {
+    fontSize: 12,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 4,
+  },
+  cardBalance: {
+    fontSize: 20,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#ffffff',
+  },
+  mastercard: {
+    flexDirection: 'row',
+  },
+  mcCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#5B4DBC',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   cardTitle: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    marginBottom: 12,
+    marginBottom: 16,
     color: '#263238',
+  },
+  barChartWrapper: {
+    alignItems: 'center',
+  },
+  chart: {
+    borderRadius: 16,
+    paddingRight: 0,
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -384,81 +572,18 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#2e7d32',
-    backgroundColor: '#f0f7f0',
+    color: '#5B4DBC',
+    backgroundColor: '#F0EEFA',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  barChartWrapper: {
-    marginVertical: 12,
-    overflow: 'hidden',
-    borderRadius: 12,
-    backgroundColor: '#f9f9f9',
-  },
-  chartStats: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: '#f0f7f0',
     borderRadius: 8,
-    padding: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#2e7d32',
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 11,
-    fontFamily: 'PoppinsRegular',
-    color: '#616161',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 14,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#2e7d32',
-  },
-  chartNote: {
-    fontSize: 11,
-    fontFamily: 'PoppinsRegular',
-    color: '#9e9e9e',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  categoryLegend: {
-    marginTop: 12,
-    gap: 8,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  colorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 12,
-    fontFamily: 'PoppinsRegular',
-    color: '#424242',
-    flex: 1,
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'PoppinsRegular',
     color: '#9e9e9e',
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: 20,
   },
   loader: {
     marginTop: 48,
@@ -479,28 +604,56 @@ const styles = StyleSheet.create({
   },
   alertRow: {
     flexDirection: 'row',
-    gap: 12,
-    paddingVertical: 8,
+    alignItems: 'flex-start',
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  alertDot: {
-    fontSize: 16,
-    marginTop: 2,
+  alertIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFF3E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   alertContent: {
     flex: 1,
   },
   alertCategory: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
     color: '#d32f2f',
     marginBottom: 2,
   },
   alertMessage: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'PoppinsRegular',
     color: '#616161',
+    lineHeight: 20,
+  },
+  orangeCard: {
+    backgroundColor: '#FF9800',
+    borderColor: '#F57C00',
+  },
+  orangeCardTitle: {
+    color: '#FFFFFF',
+  },
+  orangeAlertRow: {
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  orangeAlertIcon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  orangeAlertCategory: {
+    color: '#FFFFFF',
+  },
+  orangeAlertMessage: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  orangeEmptyText: {
+    color: 'rgba(255, 255, 255, 0.8)',
   },
 });
 

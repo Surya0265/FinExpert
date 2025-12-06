@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Sparkles } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -69,12 +71,29 @@ export default function InsightsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.mainContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Financial Insights</Text>
-        <Text style={styles.subtitle}>Get personalized budgeting advice and recommendations.</Text>
+        <LinearGradient
+          colors={['#4830D3', '#7C4DFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={['top']} style={styles.safeHeader}>
+            <View style={styles.headerTop}>
+              <View>
+                <Text style={styles.headerTitle}>Financial Insights</Text>
+                <Text style={styles.headerSubtitle}>Get personalized budgeting advice.</Text>
+              </View>
+              <View style={styles.iconContainer}>
+                <Sparkles size={24} color="#ffffff" />
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
 
-        <Text style={styles.sectionLabel}>Select Timeline</Text>
+        <View style={styles.contentBody}>
+          <Text style={styles.sectionLabel}>Select Timeline</Text>
         <View style={styles.toggleGroup}>
           {(['week', 'month'] as AdvicePeriod[]).map((item) => (
             <TouchableOpacity
@@ -107,7 +126,7 @@ export default function InsightsScreen() {
             )}
             <View style={styles.card}>
               {loading ? (
-                <ActivityIndicator color="#2e7d32" size="large" style={{ marginTop: 16 }} />
+                <ActivityIndicator color="#5B4DBC" size="large" style={{ marginTop: 16 }} />
               ) : (
                 <>
                   <View style={styles.markdownContainer}>
@@ -115,17 +134,17 @@ export default function InsightsScreen() {
                       style={markdownStyles}
                       rules={{
                         heading1: (node, children) => (
-                          <Text key={node.key} style={{ fontSize: 22, fontFamily: 'PoppinsSemiBold', color: '#1b5e20', marginTop: 16, marginBottom: 12, fontWeight: 'bold' }}>
+                          <Text key={node.key} style={{ fontSize: 22, fontFamily: 'PoppinsSemiBold', color: '#4830D3', marginTop: 16, marginBottom: 12, fontWeight: 'bold' }}>
                             {children}
                           </Text>
                         ),
                         heading2: (node, children) => (
-                          <Text key={node.key} style={{ fontSize: 20, fontFamily: 'PoppinsSemiBold', color: '#1b5e20', marginTop: 14, marginBottom: 10, fontWeight: 'bold' }}>
+                          <Text key={node.key} style={{ fontSize: 20, fontFamily: 'PoppinsSemiBold', color: '#4830D3', marginTop: 14, marginBottom: 10, fontWeight: 'bold' }}>
                             {children}
                           </Text>
                         ),
                         heading3: (node, children) => (
-                          <Text key={node.key} style={{ fontSize: 18, fontFamily: 'PoppinsSemiBold', color: '#1b5e20', marginTop: 12, marginBottom: 8, fontWeight: 'bold' }}>
+                          <Text key={node.key} style={{ fontSize: 18, fontFamily: 'PoppinsSemiBold', color: '#4830D3', marginTop: 12, marginBottom: 8, fontWeight: 'bold' }}>
                             {children}
                           </Text>
                         ),
@@ -142,43 +161,72 @@ export default function InsightsScreen() {
             </View>
           </View>
         )}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F4F6F8',
+  },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  safeHeader: {
+    paddingTop: 5,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   container: {
     flex: 1,
   },
   content: {
+    paddingBottom: 150,
+  },
+  contentBody: {
     padding: 16,
-    paddingBottom: 32,
-  },
-  title: {
-    fontSize: 22,
-    fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
-  },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: 'PoppinsRegular',
-    color: '#616161',
-    marginBottom: 16,
   },
   sectionLabel: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginBottom: 8,
   },
   toggleGroup: {
     flexDirection: 'row',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#EDE7F6',
     borderRadius: 20,
     padding: 4,
     marginBottom: 12,
@@ -190,26 +238,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
   },
   toggleText: {
     fontFamily: 'PoppinsRegular',
     fontSize: 13,
-    color: '#2e7d32',
+    color: '#5B4DBC',
   },
   toggleTextActive: {
     color: '#ffffff',
     fontFamily: 'PoppinsSemiBold',
   },
   generateButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     borderRadius: 16,
     paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 16,
   },
   generateButtonDisabled: {
-    backgroundColor: '#a5d6a7',
+    backgroundColor: '#B39DDB',
   },
   generateButtonText: {
     fontFamily: 'PoppinsSemiBold',
@@ -222,7 +270,7 @@ const styles = StyleSheet.create({
   lastAdviceTitle: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginBottom: 12,
   },
   markdownContainer: {
@@ -232,16 +280,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowColor: '#5B4DBC',
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   cardTitle: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
     marginBottom: 8,
-    color: '#1b5e20',
+    color: '#4830D3',
   },
   adviceText: {
     fontSize: 14,
@@ -279,7 +329,7 @@ const markdownStyles = StyleSheet.create({
   heading1: {
     fontSize: 22,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 16,
     marginBottom: 12,
     fontWeight: 'bold',
@@ -287,7 +337,7 @@ const markdownStyles = StyleSheet.create({
   heading2: {
     fontSize: 20,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 14,
     marginBottom: 10,
     fontWeight: 'bold',
@@ -295,7 +345,7 @@ const markdownStyles = StyleSheet.create({
   heading3: {
     fontSize: 18,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 12,
     marginBottom: 8,
     fontWeight: 'bold',
@@ -303,7 +353,7 @@ const markdownStyles = StyleSheet.create({
   heading4: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 10,
     marginBottom: 6,
     fontWeight: 'bold',
@@ -311,7 +361,7 @@ const markdownStyles = StyleSheet.create({
   heading5: {
     fontSize: 15,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 8,
     marginBottom: 4,
     fontWeight: 'bold',
@@ -319,7 +369,7 @@ const markdownStyles = StyleSheet.create({
   heading6: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginTop: 6,
     marginBottom: 2,
     fontWeight: 'bold',
@@ -331,7 +381,7 @@ const markdownStyles = StyleSheet.create({
     marginLeft: 16,
   },
   bullet_list_icon: {
-    color: '#2e7d32',
+    color: '#5B4DBC',
     marginRight: 8,
   },
   list_item: {
@@ -341,7 +391,7 @@ const markdownStyles = StyleSheet.create({
   },
   strong: {
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#4830D3',
   },
   em: {
     fontStyle: 'italic',
@@ -379,11 +429,11 @@ const markdownStyles = StyleSheet.create({
     marginVertical: 8,
   },
   link: {
-    color: '#2e7d32',
+    color: '#5B4DBC',
     textDecorationLine: 'underline',
   },
   blockquote: {
-    borderLeftColor: '#1b5e20',
+    borderLeftColor: '#4830D3',
     borderLeftWidth: 4,
     paddingLeft: 12,
     color: '#424242',

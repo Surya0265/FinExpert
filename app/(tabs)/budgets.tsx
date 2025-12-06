@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
-import { X, Zap, Sliders, TrendingUp } from 'lucide-react-native';
+import { X, Zap, Sliders, TrendingUp, Target } from 'lucide-react-native';
 import { budgetService } from '../../services/budgetService';
 import { expenseService } from '../../services/expenseService';
 
@@ -446,14 +447,29 @@ You can now review and adjust these amounts below, then save your budget.`;
 
   // UNIFIED VIEW: Show options, form, and spending breakdown
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.mainContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Budget Planner</Text>
-          
-        </View>
+        <LinearGradient
+          colors={['#4830D3', '#7C4DFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={['top']} style={styles.safeHeader}>
+            <View style={styles.headerTop}>
+              <View>
+                <Text style={styles.headerTitle}>Budget Planner</Text>
+                <Text style={styles.headerSubtitle}>Stay on track</Text>
+              </View>
+              <View style={styles.iconContainer}>
+                <Target size={24} color="#ffffff" />
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
 
-        {/* SECTION 1: Budget Type Options */}
+        <View style={styles.contentBody}>
+          {/* SECTION 1: Budget Type Options */}
         <View style={styles.optionsContainer}>
           {/* Manual Budget Option */}
           <TouchableOpacity
@@ -464,7 +480,7 @@ You can now review and adjust these amounts below, then save your budget.`;
             onPress={() => setMode('manual')}
           >
             <View style={styles.optionIconContainer}>
-              <Sliders color="#1b5e20" size={32} />
+              <Sliders color="#5B4DBC" size={32} />
             </View>
             <Text style={styles.optionTitle}>Manual</Text>
             <Text style={styles.optionDescription}>
@@ -482,7 +498,7 @@ You can now review and adjust these amounts below, then save your budget.`;
             onPress={() => setMode('ai')}
           >
             <View style={styles.optionIconContainer}>
-              <Zap color="#2e7d32" size={32} />
+              <Zap color="#5B4DBC" size={32} />
             </View>
             <Text style={styles.optionTitle}>AI Smart</Text>
             <Text style={styles.optionDescription}>
@@ -864,7 +880,7 @@ You can now review and adjust these amounts below, then save your budget.`;
         {allBudgets && allBudgets.length > 0 && (
           <View style={styles.allBudgetsContainer}>
             <View style={styles.allBudgetsHeader}>
-              <TrendingUp color="#1b5e20" size={22} />
+              <TrendingUp color="#5B4DBC" size={22} />
               <Text style={styles.allBudgetsMainTitle}>Your Budgets</Text>
             </View>
             
@@ -949,28 +965,67 @@ You can now review and adjust these amounts below, then save your budget.`;
             ))}
           </View>
         )}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F4F6F8',
+  },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  safeHeader: {
+    paddingTop: 5,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'PoppinsBold',
+    color: '#ffffff',
   },
   container: {
     flex: 1,
   },
   content: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 150,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-    gap: 12,
+  contentBody: {
+    padding: 16,
   },
   backButton: {
     padding: 8,
@@ -1003,22 +1058,22 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   optionCardActive: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     borderWidth: 2,
-    borderColor: '#2e7d32',
+    borderColor: '#5B4DBC',
   },
   optionCheckmark: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     marginTop: 8,
   },
   optionIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -1026,7 +1081,7 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -1039,7 +1094,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   optionBadge: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -1047,17 +1102,19 @@ const styles = StyleSheet.create({
   optionBadgeText: {
     fontSize: 11,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowColor: '#5B4DBC',
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   section: {
     marginBottom: 16,
@@ -1065,7 +1122,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
     marginBottom: 8,
   },
   helperText: {
@@ -1103,20 +1160,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
     paddingLeft: 8,
   },
   currencySymbol: {
     fontSize: 18,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   inputGroup: {
     flexDirection: 'row',
     gap: 8,
   },
   addButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     paddingHorizontal: 16,
     borderRadius: 12,
     justifyContent: 'center',
@@ -1144,18 +1201,18 @@ const styles = StyleSheet.create({
   categoryTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#2e7d32',
+    borderColor: '#5B4DBC',
     gap: 8,
   },
   categoryTagText: {
     fontSize: 12,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   removeTag: {
     padding: 2,
@@ -1192,16 +1249,16 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   generateButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
   },
   saveButton: {
-    backgroundColor: '#1b5e20',
+    backgroundColor: '#4830D3',
   },
   backButtonStyle: {
     backgroundColor: '#757575',
   },
   editButton: {
-    backgroundColor: '#388e3c',
+    backgroundColor: '#5B4DBC',
   },
   buttonText: {
     color: '#ffffff',
@@ -1232,13 +1289,13 @@ const styles = StyleSheet.create({
     maxWidth: '95%',
   },
   aiMessage: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     borderLeftWidth: 3,
-    borderLeftColor: '#2e7d32',
+    borderLeftColor: '#5B4DBC',
     alignSelf: 'flex-start',
   },
   userMessage: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     alignSelf: 'flex-end',
   },
   chatText: {
@@ -1248,14 +1305,14 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   aiMessageText: {
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   periodButtonsContainer: {
     marginTop: 12,
     gap: 8,
   },
   periodButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -1286,8 +1343,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   periodOptionActive: {
-    borderColor: '#2e7d32',
-    backgroundColor: '#e8f5e9',
+    borderColor: '#5B4DBC',
+    backgroundColor: '#F0EEFA',
   },
   periodOptionText: {
     fontSize: 12,
@@ -1295,7 +1352,7 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   periodOptionTextActive: {
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   amountInputWrapper: {
     flexDirection: 'row',
@@ -1311,7 +1368,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   allocationRow: {
     flexDirection: 'row',
@@ -1327,7 +1384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 12,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F0EEFA',
     borderRadius: 12,
     marginVertical: 12,
   },
@@ -1342,7 +1399,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 16,
     fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   budgetCompare: {
     alignItems: 'flex-end',
@@ -1378,10 +1435,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowColor: '#5B4DBC',
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   spendingHeader: {
     flexDirection: 'row',
@@ -1392,7 +1451,7 @@ const styles = StyleSheet.create({
   spendingTitle: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    color: '#1b5e20',
+    color: '#5B4DBC',
   },
   categorySpendingItem: {
     marginBottom: 16,
@@ -1414,7 +1473,7 @@ const styles = StyleSheet.create({
   categorySpendingPercent: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#4caf50',
+    color: '#FF9F43',
   },
   progressBarContainer: {
     height: 8,
@@ -1453,7 +1512,7 @@ const styles = StyleSheet.create({
     color: '#e91e63',
   },
   editBudgetButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#5B4DBC',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
@@ -1484,7 +1543,7 @@ const styles = StyleSheet.create({
   allBudgetsMainTitle: {
     fontSize: 20,
     fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
+    color: '#4830D3',
   },
   budgetCard: {
     backgroundColor: '#ffffff',
@@ -1492,11 +1551,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     borderLeftWidth: 4,
-    borderLeftColor: '#2e7d32',
-    shadowColor: '#000',
+    borderLeftColor: '#5B4DBC',
+    shadowColor: '#5B4DBC',
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0EEFA',
   },
   budgetCardHeader: {
     flexDirection: 'row',
@@ -1510,13 +1571,13 @@ const styles = StyleSheet.create({
   budgetCardName: {
     fontSize: 15,
     fontFamily: 'PoppinsBold',
-    color: '#1b5e20',
+    color: '#4830D3',
     marginBottom: 4,
   },
   budgetCardTotal: {
     fontSize: 13,
     fontFamily: 'PoppinsSemiBold',
-    color: '#2e7d32',
+    color: '#5B4DBC',
   },
   budgetDeleteButton: {
     padding: 8,
@@ -1525,7 +1586,7 @@ const styles = StyleSheet.create({
   },
   budgetBreakdown: {
     borderTopWidth: 1,
-    borderTopColor: '#e8f5e9',
+    borderTopColor: '#EDE7F6',
     paddingTop: 12,
   },
   breakdownTitle: {
@@ -1556,8 +1617,8 @@ const styles = StyleSheet.create({
   categoryBreakdownPercent: {
     fontSize: 12,
     fontFamily: 'PoppinsBold',
-    color: '#4caf50',
-    backgroundColor: '#e8f5e9',
+    color: '#5B4DBC',
+    backgroundColor: '#EDE7F6',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1609,7 +1670,7 @@ const styles = StyleSheet.create({
   budgetCategoryAmount: {
     fontSize: 12,
     fontFamily: 'PoppinsSemiBold',
-    color: '#2e7d32',
+    color: '#5B4DBC',
   },
   budgetProgressBar: {
     height: 6,

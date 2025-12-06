@@ -7,7 +7,7 @@
     "userInterfaceStyle": "light",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#2E7D32"
+      "backgroundColor": "#5B4DBC"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -27,7 +27,7 @@
           "image": "./assets/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#2E7D32"
+          "backgroundColor": "#5B4DBC"
         }
       ]
     ],
