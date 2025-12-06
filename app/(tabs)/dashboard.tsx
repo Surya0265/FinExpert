@@ -298,8 +298,8 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 20,
+    paddingBottom: 35,
+    paddingTop: 35,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
@@ -364,24 +364,24 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: 'PoppinsBold',
     color: '#ffffff',
-    lineHeight: 22,
+    lineHeight: 26,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'PoppinsRegular',
     color: 'rgba(255, 255, 255, 0.9)',
   },
   headerUsername: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'PoppinsBold',
     color: '#ffffff',
   },
   headerBottom: {
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 24,
   },
   balanceCard: {
     alignItems: 'center',
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontFamily: 'PoppinsBold',
     color: '#ffffff',
-    marginBottom: 24,
+    marginBottom: 32,
     textAlign: 'center',
   },
   statsRow: {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles } from 'lucide-react-native';
+import { Brain } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -86,7 +86,7 @@ export default function InsightsScreen() {
                 <Text style={styles.headerSubtitle}>Get personalized budgeting advice.</Text>
               </View>
               <View style={styles.iconContainer}>
-                <Sparkles size={24} color="#ffffff" />
+                <Brain size={24} color="#ffffff" />
               </View>
             </View>
           </SafeAreaView>

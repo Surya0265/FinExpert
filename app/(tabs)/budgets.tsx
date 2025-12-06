@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
-import { X, Zap, Sliders, TrendingUp, Target } from 'lucide-react-native';
+import { X, Cpu, Calculator, TrendingUp, Target } from 'lucide-react-native';
 import { budgetService } from '../../services/budgetService';
 import { expenseService } from '../../services/expenseService';
 
@@ -480,7 +480,7 @@ You can now review and adjust these amounts below, then save your budget.`;
             onPress={() => setMode('manual')}
           >
             <View style={styles.optionIconContainer}>
-              <Sliders color="#5B4DBC" size={32} />
+              <Calculator color="#808080" size={32} />
             </View>
             <Text style={styles.optionTitle}>Manual</Text>
             <Text style={styles.optionDescription}>
@@ -498,7 +498,7 @@ You can now review and adjust these amounts below, then save your budget.`;
             onPress={() => setMode('ai')}
           >
             <View style={styles.optionIconContainer}>
-              <Zap color="#5B4DBC" size={32} />
+              <Cpu color="#808080" size={32} />
             </View>
             <Text style={styles.optionTitle}>AI Smart</Text>
             <Text style={styles.optionDescription}>
@@ -511,6 +511,15 @@ You can now review and adjust these amounts below, then save your budget.`;
         {/* SECTION 2: Budget Form (changes based on mode) */}
         {mode === 'manual' && (
           <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.sectionTitle}>Manual Budget Setup</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setMode('selection')}
+              >
+                <X color="#ffffff" size={20} />
+              </TouchableOpacity>
+            </View>
             {/* Budget Name Input */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Budget Name</Text>
@@ -638,6 +647,15 @@ You can now review and adjust these amounts below, then save your budget.`;
 
         {mode === 'ai' && (
           <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.sectionTitle}>AI Smart Budget</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setMode('selection')}
+              >
+                <X color="#ffffff" size={20} />
+              </TouchableOpacity>
+            </View>
             {/* Budget Name Input */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Budget Name</Text>
@@ -903,7 +921,7 @@ You can now review and adjust these amounts below, then save your budget.`;
                     style={styles.budgetDeleteButton}
                     disabled={!budget.budget_id}
                   >
-                    <X color="#e91e63" size={20} />
+                    <X color="#ffffff" size={20} />
                   </TouchableOpacity>
                 </View>
 
@@ -1049,7 +1067,7 @@ const styles = StyleSheet.create({
   optionCard: {
     flex: 1,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
@@ -1061,6 +1079,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0EEFA',
     borderWidth: 2,
     borderColor: '#5B4DBC',
+    borderRadius: 12,
   },
   optionCheckmark: {
     width: 24,
@@ -1088,7 +1107,7 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontSize: 12,
     fontFamily: 'PoppinsRegular',
-    color: '#616161',
+    color: '#5B4DBC',
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 18,
@@ -1115,6 +1134,20 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: '#F0EEFA',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FF9F43',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
     marginBottom: 16,
@@ -1582,7 +1615,7 @@ const styles = StyleSheet.create({
   budgetDeleteButton: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#ffebee',
+    backgroundColor: '#FF9F43',
   },
   budgetBreakdown: {
     borderTopWidth: 1,

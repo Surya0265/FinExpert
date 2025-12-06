@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Wallet, PieChart, Target, FileDown, Sparkles } from 'lucide-react-native';
+import { Wallet, PieChart, Target, FileDown, Brain } from 'lucide-react-native';
 import { View, Platform } from 'react-native';
 
 export default function TabsLayout() {
@@ -64,7 +64,7 @@ export default function TabsLayout() {
           title: 'AI Advice',
           tabBarIcon: ({ color, size }) => (
             <View>
-              <Sparkles color={color} size={size} />
+              <Brain color={color} size={size} />
             </View>
           ),
         }}
