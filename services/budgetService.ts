@@ -70,6 +70,11 @@ export const budgetService = {
     return response.data;
   },
 
+  async saveAdvice(advice: string, period: 'week' | 'month'): Promise<{ message: string; advice_id: string }> {
+    const response = await api.post(API_ENDPOINTS.SAVE_ADVICE, { advice, period });
+    return response.data;
+  },
+
   async getAIBudgetAllocation(data: { totalBudget: number; categories: string[] }): Promise<AIAllocationResponse> {
     const response = await api.post(API_ENDPOINTS.GET_AI_BUDGET_ALLOCATION, data);
     return response.data;

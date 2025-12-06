@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Trash2 } from 'lucide-react-native';
 import { expenseService, Expense, AddExpenseData } from '../../services/expenseService';
 import Toast from 'react-native-toast-message';
 
@@ -68,13 +70,26 @@ export default function ExpensesScreen() {
   };
 
   const deleteExpense = async (id: string) => {
-    try {
-      await expenseService.deleteExpense(id);
-      Toast.show({ type: 'success', text1: 'Expense deleted' });
-      loadExpenses();
-    } catch (e) {
-      Toast.show({ type: 'error', text1: 'Could not delete expense' });
-    }
+    Alert.alert(
+      'Delete Expense',
+      'Are you sure you want to delete this expense?',
+      [
+        { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              await expenseService.deleteExpense(id);
+              Toast.show({ type: 'success', text1: 'Expense deleted' });
+              loadExpenses();
+            } catch (e) {
+              Toast.show({ type: 'error', text1: 'Could not delete expense' });
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
   };
 
   return (
@@ -95,18 +110,21 @@ export default function ExpensesScreen() {
           const dateLabel = item.date ? new Date(item.date).toDateString() : 'No date';
 
           return (
-            <TouchableOpacity style={styles.item} onPress={() => openEdit(item)}>
-              <View>
-                <Text style={styles.itemCategory}>{item.category || 'Uncategorized'}</Text>
-                <Text style={styles.itemDate}>{dateLabel}</Text>
-              </View>
-              <View style={styles.itemRight}>
+            <View style={styles.itemWrapper}>
+              <TouchableOpacity style={styles.item} onPress={() => openEdit(item)}>
+                <View style={styles.itemLeft}>
+                  <Text style={styles.itemCategory}>{item.category || 'Uncategorized'}</Text>
+                  <Text style={styles.itemDate}>{dateLabel}</Text>
+                </View>
                 <Text style={styles.itemAmount}>₹{amount.toFixed(2)}</Text>
-                <TouchableOpacity onPress={() => deleteExpense(item.expense_id)}>
-                  <Text style={styles.deleteText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={() => deleteExpense(item.expense_id)}
+              >
+                <Trash2 size={18} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
           );
         }}
         ListEmptyComponent={!loading ? <Text style={styles.emptyText}>No expenses yet.</Text> : null}
@@ -174,11 +192,17 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsBold',
     color: '#1b5e20',
   },
+  itemWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 10,
+  },
   item: {
+    flex: 1,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 14,
-    marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -186,6 +210,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  itemLeft: {
+    flex: 1,
   },
   itemCategory: {
     fontFamily: 'PoppinsSemiBold',
@@ -196,6 +223,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsRegular',
     fontSize: 12,
     color: '#9e9e9e',
+    marginTop: 2,
   },
   itemRight: {
     alignItems: 'flex-end',
@@ -204,6 +232,17 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
     fontSize: 14,
     color: '#2e7d32',
+  },
+  deleteButton: {
+    backgroundColor: '#d32f2f',
+    borderRadius: 12,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#d32f2f',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   deleteText: {
     fontFamily: 'PoppinsRegular',

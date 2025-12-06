@@ -50,6 +50,20 @@ CREATE TABLE "users" (
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("user_id")
 );
+-- CreateTable
+CREATE TABLE "advice" (
+    "advice_id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "user_id" UUID NOT NULL,
+    "advice_text" TEXT NOT NULL,
+    "period" VARCHAR(20) NOT NULL,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "advice_pkey" PRIMARY KEY ("advice_id")
+);
+
+-- AddForeignKey
+ALTER TABLE "advice" ADD CONSTRAINT "advice_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
 
 -- CreateIndex
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");

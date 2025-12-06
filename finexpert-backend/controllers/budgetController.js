@@ -38,18 +38,34 @@ const summarizeExpenses = (expenses) => {
 };
 
 const generateAdvicePrompt = (spendingData, period) => {
-    return `I have some spending data for the last ${period}, and I need financial advice.
+    return `You are a financial advisor. Analyze the following spending data and provide structured financial advice using markdown formatting.
 
-Here is the spending breakdown: 
+Spending data for the last ${period}:
 ${JSON.stringify(spendingData, null, 2)}
 
-Please analyze this and provide structured financial advice:
-- Point out areas of overspending
-- Suggest practical ways to save
-- Provide actionable recommendations based on spending trends
-- Keep it concise and professional
+Provide analysis in this exact markdown format with proper heading syntax:
 
-Avoid using emojis.`;
+## Analysis
+Key observations about spending patterns
+
+## Areas of Potential Overspending
+Categories where user can reduce spending, with specific details
+
+## Practical Ways to Save
+- List specific, actionable tips
+- Each tip on a new line with a bullet point
+- Focus on practical advice
+
+## Recommendations
+General financial guidance and next steps
+
+Requirements:
+- Use ## for main headings (will display in green)
+- Do NOT start with "Okay", "Here's", or similar phrases
+- Be direct and professional
+- Avoid emojis
+- Focus on actionable insights
+- Use clear markdown formatting for better readability`;
 };
 
 const roundToTwo = (value) => {
@@ -475,6 +491,33 @@ const callGeminiAI = async (prompt, retryCount = 0) => {
 
         console.error("All API keys exhausted or fatal error occurred.");
         throw error;
+    }
+};
+
+exports.saveAdvice = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { advice, period } = req.body;
+
+        if (!advice || !period) {
+            return res.status(400).json({ message: "Advice and period are required." });
+        }
+
+        const savedAdvice = await prisma.advice.create({
+            data: {
+                user_id: userId,
+                advice_text: advice,
+                period: period,
+            },
+        });
+
+        res.json({
+            message: "Advice saved successfully",
+            advice_id: savedAdvice.advice_id,
+        });
+    } catch (error) {
+        console.error("Error saving advice:", error);
+        res.status(500).json({ message: "Error saving advice." });
     }
 };
 

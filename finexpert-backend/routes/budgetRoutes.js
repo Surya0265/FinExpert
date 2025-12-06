@@ -9,6 +9,7 @@ router.post('/set', budgetController.setBudget);
 router.get('/get', budgetController.getBudget);
 router.get('/alerts', budgetController.checkBudgetAlerts);
 router.get('/advice', budgetController.getBudgetAdvice);
+router.post('/save-advice', budgetController.saveAdvice);
 router.post('/ai-allocation', budgetController.getAIBudgetAllocation);
 router.delete('/delete/:budgetId', budgetController.deleteBudget);
 

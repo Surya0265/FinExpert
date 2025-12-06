@@ -1,52 +1,70 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL, API_ENDPOINTS } from '../../constants/API';
 import Toast from 'react-native-toast-message';
-import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export default function ReportsScreen() {
   const [loading, setLoading] = useState(false);
+  const [months, setMonths] = useState('1');
 
-  const openDownload = async () => {
+  const downloadReport = async () => {
     try {
+      const monthsNum = parseInt(months);
+      if (!monthsNum || isNaN(monthsNum) || monthsNum <= 0) {
+        Toast.show({ type: 'error', text1: 'Please enter a valid number of months' });
+        return;
+      }
+
       setLoading(true);
       const token = await AsyncStorage.getItem('authToken');
       if (!token) {
         Toast.show({ type: 'error', text1: 'Please login again.' });
         return;
       }
-      const url = `${API_BASE_URL}${API_ENDPOINTS.DOWNLOAD_REPORT}`;
-      await WebBrowser.openBrowserAsync(`${url}?token=${token}`);
-    } catch (e) {
-      Toast.show({ type: 'error', text1: 'Could not open report' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // send-report is typically for email; we just call the endpoint without body
-  const sendEmail = async () => {
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem('authToken');
-      if (!token) {
-        Toast.show({ type: 'error', text1: 'Please login again.' });
-        return;
+      const days = monthsNum * 30; // Convert months to days
+      const url = `${API_BASE_URL}${API_ENDPOINTS.DOWNLOAD_REPORT}?days=${days}`;
+      
+      // Create documents directory if it doesn't exist
+      const documentsDir = `${FileSystem.documentDirectory}FinExpertReports/`;
+      const dirInfo = await FileSystem.getInfoAsync(documentsDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(documentsDir, { intermediates: true });
       }
-      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SEND_REPORT}`, {
-        method: 'POST',
+      
+      const fileName = `Financial_Report_${monthsNum}months_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileUri = `${documentsDir}${fileName}`;
+      
+      // Download file to documents directory
+      const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || 'Failed');
-      Toast.show({ type: 'success', text1: data.message || 'Report sent to your email' });
+
+      if (downloadResult.status !== 200) {
+        Toast.show({ type: 'error', text1: 'Failed to download report' });
+        return;
+      }
+
+      Toast.show({ 
+        type: 'success', 
+        text1: 'Report Downloaded!',
+        text2: `Saved to: FinExpertReports/${fileName}`
+      });
+      
+      // Show alert with file location
+      Alert.alert(
+        'Report Downloaded',
+        `Your report has been saved to:\n\nFinExpertReports/${fileName}\n\nYou can access it from your device's file manager.`,
+        [{ text: 'OK' }]
+      );
     } catch (e: any) {
-      Toast.show({ type: 'error', text1: 'Could not send report' });
+      Toast.show({ type: 'error', text1: e.message || 'Could not download report' });
+      console.error('Download error:', e);
     } finally {
       setLoading(false);
     }
@@ -55,28 +73,37 @@ export default function ReportsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-      <Text style={styles.title}>Reports</Text>
-      <Text style={styles.subtitle}>Generate and access detailed financial reports.</Text>
+        <Text style={styles.title}>Reports</Text>
+        <Text style={styles.subtitle}>Generate and download detailed financial reports.</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Download PDF report</Text>
-        <Text style={styles.cardText}>
-          Opens a PDF summary of your recent expenses and budgets in the browser.
-        </Text>
-        <TouchableOpacity style={styles.button} onPress={openDownload} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Opening...' : 'Open report'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Email me the report</Text>
-        <Text style={styles.cardText}>We will generate and send the report to your email.</Text>
-        <TouchableOpacity style={styles.buttonSecondary} onPress={sendEmail} disabled={loading}>
-          <Text style={styles.buttonSecondaryText}>
-            {loading ? 'Sending...' : 'Send to email'}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Download Financial Report as PDF</Text>
+          <Text style={styles.cardText}>
+            Specify how many months of expenses and budget data you want in your report.
           </Text>
-        </TouchableOpacity>
-      </View>
+          
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Number of Months:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 1, 3, 6, 12"
+              value={months}
+              onChangeText={setMonths}
+              keyboardType="number-pad"
+              editable={!loading}
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={downloadReport} 
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Generating...' : 'Download PDF Report'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -124,28 +151,38 @@ const styles = StyleSheet.create({
     color: '#616161',
     marginBottom: 12,
   },
+  inputContainer: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 12,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#263238',
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
   button: {
     backgroundColor: '#2e7d32',
     borderRadius: 16,
     paddingVertical: 12,
     alignItems: 'center',
   },
+  buttonDisabled: {
+    backgroundColor: '#a5d6a7',
+  },
   buttonText: {
     fontFamily: 'PoppinsSemiBold',
     fontSize: 14,
     color: '#ffffff',
-  },
-  buttonSecondary: {
-    borderRadius: 16,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2e7d32',
-  },
-  buttonSecondaryText: {
-    fontFamily: 'PoppinsSemiBold',
-    fontSize: 14,
-    color: '#2e7d32',
   },
 });
 
