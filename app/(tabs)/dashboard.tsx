@@ -11,6 +11,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const screenWidth = Dimensions.get('window').width - 32;
 
+interface User {
+  name: string;
+  email?: string;
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -19,6 +24,7 @@ export default function DashboardScreen() {
   const [categoryData, setCategoryData] = useState<ChartData[]>([]);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -46,6 +52,16 @@ export default function DashboardScreen() {
     try {
       console.log('[Dashboard] Loading data...');
       setError(null);
+      
+      // Fetch user info from AsyncStorage
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } else {
+        // Fallback to a default user name
+        setUser({ name: 'User' });
+      }
       
       const [weekExpenses, categoryExpenses, alertsRes] = await Promise.all([
         expenseService.getExpensesByPeriod('week'),
@@ -138,7 +154,6 @@ export default function DashboardScreen() {
   return (
     <View style={styles.mainContainer}>
       <ScrollView 
-        style={styles.container} 
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5B4DBC" />}
         showsVerticalScrollIndicator={false}
@@ -151,26 +166,28 @@ export default function DashboardScreen() {
         >
           <SafeAreaView edges={['top']} style={styles.safeHeader}>
             <View style={styles.headerTop}>
-              <Text style={styles.headerSubtitle}>Welcome back!</Text>
-              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                <LogOut size={24} color="#ffffff" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.headerCenter}>
-              <Wallet size={28} color="#ffffff" />
-              <Text style={styles.headerAppTitle}>FinExpert</Text>
-            </View>
-            <View style={styles.headerBottom}>
-              <Text style={styles.headerUsername}>User</Text>
+              <View style={styles.headerLeft}>
+                <Text style={styles.headerWelcome}>Welcome, {user?.name}</Text>
+                <Text style={styles.headerSubtitle}>Your personal finance dashboard</Text>
+              </View>
+              <View style={styles.headerRightSection}>
+                <View style={styles.headerRight}>
+                  <Text style={styles.finexpertTitle}>FinExpert</Text>
+                  <View style={styles.iconContainer}>
+                    <Wallet color="#fff" size={24} />
+                  </View>
+                </View>
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                  <LogOut color="#fff" size={18} />
+                  <Text style={styles.logoutButtonText}>Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.balanceCard}>
               <View style={styles.balanceHeader}>
                 <Text style={styles.balanceLabel}>Total Spent (Week)</Text>
-                <View style={styles.trendBadge}>
-                  <TrendingUp size={14} color="#4CAF50" />
-                  <Text style={styles.trendText}>+2.5%</Text>
-                </View>
+                
               </View>
               <Text style={styles.balanceAmount}>₹{totalSpent.toFixed(2)}</Text>
             </View>
@@ -208,7 +225,7 @@ export default function DashboardScreen() {
                     accessor="amount"
                     backgroundColor="#ffffff"
                     paddingLeft="0"
-                    chartConfig={chartConfig}
+                    chartConfig={improvedChartConfig}
                     center={[10, 0]}
                     absolute
                   />
@@ -255,11 +272,15 @@ export default function DashboardScreen() {
                   Object.entries(alerts.alerts).map(([category, message]) => (
                     <View key={category} style={[styles.alertRow, styles.orangeAlertRow]}>
                       <View style={[styles.alertIcon, styles.orangeAlertIcon]}>
-                        <Text>⚠️</Text>
+                        {/* Use Bell icon for alert */}
+                        <Bell color="#fff" size={24} />
                       </View>
                       <View style={styles.alertContent}>
-                        <Text style={[styles.alertCategory, styles.orangeAlertCategory]}>{category}</Text>
-                        <Text style={[styles.alertMessage, styles.orangeAlertMessage]}>{message}</Text>
+                        <Text style={[styles.alertCategory, styles.orangeAlertCategory, { fontSize: 18, color: '#fff' }]}>{category}</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '900', color: '#fff', fontFamily: 'PoppinsBold', marginTop: 6, marginBottom: 4 }}>
+                          {message}
+                        </Text>
+                        <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.5)', marginVertical: 4 }} />
                       </View>
                     </View>
                   ))
@@ -278,62 +299,97 @@ export default function DashboardScreen() {
 
 const PIE_COLORS = ['#5B4DBC', '#FF9F43', '#FF6B6B', '#4830D3', '#1DD1A1', '#54A0FF', '#5f27cd', '#ff9ff3'];
 
-const chartConfig = {
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
-  color: (opacity = 1) => `rgba(91, 77, 188, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(66, 66, 66, ${opacity})`,
-  propsForDots: {
-    r: '4',
-    strokeWidth: '2',
-    stroke: '#5B4DBC',
-  },
-  propsForBackgroundLines: {
-    strokeDasharray: '5',
-    stroke: '#f0f0f0',
-    strokeWidth: 1,
-  },
-};
-
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#F4F6F8',
-  },
-  headerGradient: {
-    paddingHorizontal: 20,
-    paddingBottom: 35,
-    paddingTop: 35,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    backgroundColor: '#ffffff',
   },
   safeHeader: {
-    paddingTop: 5,
+    flex: 1,
+  },
+  headerGradient: {
+    paddingTop: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
   },
   headerTop: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 0,
-    marginBottom: 12,
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 8,
   },
-  headerCenter: {
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    marginTop: 0,
+  },
+  headerWelcome: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 2,
+    marginTop: -2,
+    letterSpacing: 0.2,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.8,
+  },
+  headerRightSection: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  finexpertTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginRight: 4,
+    marginTop: 0,
+  },
+  iconContainer: {
+    backgroundColor: '#FF8C42',
+    borderRadius: 16,
+    padding: 6,
+    marginTop: -2,
+    marginLeft: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    backgroundColor: '#FF8C42',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
-
-  headerAppTitle: {
-    fontSize: 18,
-    fontFamily: 'PoppinsBold',
-    color: '#ffffff',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  logoutButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.5,
   },
   avatarContainer: {
     width: 48,
@@ -376,24 +432,17 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     lineHeight: 26,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    fontFamily: 'PoppinsRegular',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
+  // Removed duplicate headerSubtitle style
   headerUsername: {
     fontSize: 18,
     fontFamily: 'PoppinsBold',
     color: '#ffffff',
   },
-  headerBottom: {
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
   balanceCard: {
     alignItems: 'center',
     paddingHorizontal: 4,
-  },
+      paddingTop: 24,
+    },
   balanceHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,9 +509,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
     color: '#ffffff',
   },
-  container: {
-    flex: 1,
-  },
+
   scrollContent: {
     paddingBottom: 150,
   },
@@ -559,9 +606,10 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontFamily: 'PoppinsSemiBold',
+    fontFamily: 'PoppinsBold',
+    fontWeight: 'bold',
     marginBottom: 16,
-    color: '#263238',
+    color: '#fff',
   },
   barChartWrapper: {
     alignItems: 'center',
@@ -636,8 +684,9 @@ const styles = StyleSheet.create({
   },
   alertMessage: {
     fontSize: 13,
-    fontFamily: 'PoppinsRegular',
-    color: '#616161',
+    fontFamily: 'PoppinsBold',
+    color: '#fff',
+    fontWeight: 'bold',
     lineHeight: 20,
   },
   orangeCard: {
@@ -646,6 +695,9 @@ const styles = StyleSheet.create({
   },
   orangeCardTitle: {
     color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontFamily: 'PoppinsBold',
+    fontSize: 18,
   },
   orangeAlertRow: {
     borderBottomColor: 'rgba(255, 255, 255, 0.2)',
@@ -655,6 +707,9 @@ const styles = StyleSheet.create({
   },
   orangeAlertCategory: {
     color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontFamily: 'PoppinsBold',
+    fontSize: 15,
   },
   orangeAlertMessage: {
     color: 'rgba(255, 255, 255, 0.9)',

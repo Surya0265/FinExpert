@@ -6,6 +6,7 @@ CREATE TABLE "budgets" (
     "allocated_budget" JSON,
     "alerts" JSON,
     "budget_name" VARCHAR(100),
+    "ai_period" VARCHAR(20),
 
     CONSTRAINT "budgets_pkey" PRIMARY KEY ("budget_id")
 );

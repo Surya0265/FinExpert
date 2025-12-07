@@ -250,19 +250,22 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
   },
   generateButton: {
-    backgroundColor: '#5B4DBC',
+    backgroundColor: '#FF9800',
     borderRadius: 16,
     paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 16,
+    borderColor: '#F57C00',
+    borderWidth: 1,
   },
   generateButtonDisabled: {
     backgroundColor: '#B39DDB',
   },
   generateButtonText: {
-    fontFamily: 'PoppinsSemiBold',
-    fontSize: 14,
+    fontFamily: 'PoppinsBold',
+    fontSize: 15,
     color: '#ffffff',
+    fontWeight: 'bold',
   },
   adviceSection: {
     marginTop: 24,
@@ -438,6 +441,23 @@ const markdownStyles = StyleSheet.create({
     paddingLeft: 12,
     color: '#424242',
   },
+    orangeCard: {
+      backgroundColor: '#FF9800',
+      borderColor: '#F57C00',
+      borderWidth: 1,
+      borderRadius: 20,
+    },
+    orangeCardTitle: {
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      fontFamily: 'PoppinsBold',
+      fontSize: 18,
+      marginBottom: 8,
+    },
+    orangeText: {
+      color: '#FF9800',
+      fontWeight: 'bold',
+    },
 });
 
 

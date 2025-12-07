@@ -114,11 +114,11 @@ export default function ReportsScreen() {
           </View>
 
           <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
+            style={[styles.button, styles.orangeButton, loading && styles.buttonDisabled]} 
             onPress={downloadReport} 
             disabled={loading}
           >
-            <Text style={styles.buttonText}>
+            <Text style={[styles.buttonText, { fontWeight: 'bold', fontFamily: 'PoppinsBold', fontSize: 15 }] }>
               {loading ? 'Generating...' : 'Download PDF Report'}
             </Text>
           </TouchableOpacity>
@@ -228,6 +228,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 12,
     alignItems: 'center',
+  },
+  orangeButton: {
+    backgroundColor: '#FF9800',
+    borderRadius: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderColor: '#F57C00',
+    borderWidth: 1,
   },
   buttonDisabled: {
     backgroundColor: '#B39DDB',

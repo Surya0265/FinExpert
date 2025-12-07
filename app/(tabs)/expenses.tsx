@@ -96,12 +96,13 @@ export default function ExpensesScreen() {
   return (
     <View style={styles.mainContainer}>
       <FlatList
+        contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <LinearGradient
             colors={['#4830D3', '#7C4DFF']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.headerGradient, { marginBottom: 16 }]}
+            style={styles.headerGradient}
           >
             <SafeAreaView edges={['top']} style={styles.safeHeader}>
               <View style={styles.headerTop}>
@@ -116,11 +117,11 @@ export default function ExpensesScreen() {
             </SafeAreaView>
           </LinearGradient>
         }
+        ListHeaderComponentStyle={styles.listHeaderSpacing}
         data={expenses}
         keyExtractor={(item) => item.expense_id.toString()}
         onRefresh={loadExpenses}
         refreshing={loading}
-        contentContainerStyle={expenses.length ? { paddingBottom: 150 } : styles.emptyContainer}
         renderItem={({ item }) => {
           const amount = typeof item.amount === 'number' ? item.amount : Number(item.amount) || 0;
           const dateLabel = item.date ? new Date(item.date).toDateString() : 'No date';
@@ -143,7 +144,13 @@ export default function ExpensesScreen() {
             </View>
           );
         }}
-        ListEmptyComponent={!loading ? <Text style={styles.emptyText}>No expenses yet.</Text> : null}
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No expenses yet.</Text>
+            </View>
+          ) : null
+        }
       />
 
       <TouchableOpacity style={styles.fab} onPress={openNew}>
@@ -228,10 +235,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: 'PoppinsBold',
-    color: '#ffffff',
+  listHeaderSpacing: {
+    marginBottom: 16,
+  },
+  listContent: {
+    paddingBottom: 150,
   },
   container: {
     flex: 1,
@@ -299,9 +307,8 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     marginTop: 2,
   },
-  emptyContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
+  emptyState: {
+    marginTop: 40,
     alignItems: 'center',
   },
   emptyText: {
