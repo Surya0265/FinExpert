@@ -25,6 +25,9 @@ export const authService = {
     if (response.data.token) {
       await AsyncStorage.setItem('authToken', response.data.token);
     }
+    if (response.data.user) {
+      await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 

@@ -30,7 +30,11 @@ export default function LoginScreen() {
     }
     try {
       setLoading(true);
-      await authService.login(form);
+      const response = await authService.login(form);
+      if (!response.user) {
+        console.warn('[Login] No user data in response, saving email as fallback');
+        await AsyncStorage.setItem('userData', JSON.stringify({ name: form.email.split('@')[0], email: form.email }));
+      }
       Toast.show({ type: 'success', text1: 'Welcome back!' });
       router.replace('/(tabs)/dashboard');
     } catch (error: any) {
