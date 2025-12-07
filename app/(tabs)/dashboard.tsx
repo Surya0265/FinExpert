@@ -168,19 +168,18 @@ export default function DashboardScreen() {
             <View style={styles.headerTop}>
               <View style={styles.headerLeft}>
                 <Text style={styles.headerWelcome}>Welcome, {user?.name}</Text>
-                <Text style={styles.headerSubtitle}>Your personal finance dashboard</Text>
               </View>
               <View style={styles.headerRightSection}>
-                <View style={styles.headerRight}>
-                  <Text style={styles.finexpertTitle}>FinExpert</Text>
-                  <View style={styles.iconContainer}>
-                    <Wallet color="#fff" size={24} />
-                  </View>
-                </View>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                   <LogOut color="#fff" size={18} />
                   <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.finexpertContainer}>
+              <Text style={styles.finexpertTitle}>FinExpert</Text>
+              <View style={styles.iconContainer}>
+                <Wallet color="#fff" size={24} />
               </View>
             </View>
 
@@ -321,7 +320,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 24,
-    paddingTop: 36,
+    paddingTop: 16,
     paddingBottom: 8,
   },
   headerLeft: {
@@ -331,12 +330,21 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginTop: 0,
   },
+  finexpertContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+  },
   headerWelcome: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 2,
-    marginTop: -2,
+    marginTop: 8,
     letterSpacing: 0.2,
   },
   headerSubtitle: {
@@ -347,19 +355,16 @@ const styles = StyleSheet.create({
   headerRightSection: {
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: 8,
+    gap: 2,
+    justifyContent: 'flex-start',
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  finexpertTitle: {
-    fontSize: 20,
+    finexpertTitle: {
+      fontSize: 28,
     fontWeight: '700',
     color: '#fff',
-    marginRight: 4,
+    marginRight: 0,
     marginTop: 0,
+    textAlign: 'center',
   },
   iconContainer: {
     backgroundColor: '#FF8C42',
@@ -377,7 +382,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#FF8C42',
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -387,9 +392,9 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: 'bold',
     fontSize: 15,
-    letterSpacing: 0.5,
+    fontFamily: 'PoppinsBold',
   },
   avatarContainer: {
     width: 48,
