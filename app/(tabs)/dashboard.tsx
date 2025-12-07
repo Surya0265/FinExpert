@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   headerWelcome: {
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 2,
