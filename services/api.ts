@@ -51,12 +51,37 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      console.log('[API] Session expired - redirecting to login');
+    const status = error.response?.status;
+    const data = error.response?.data;
+    
+    // Handle 401 Unauthorized or token-related errors
+    if (status === 401 || (status === 400 && data?.message?.includes('token'))) {
+      console.log('[API] Unauthorized or token error - redirecting to login');
       await AsyncStorage.removeItem('authToken');
-      // Redirect to login page
-      router.replace('/(auth)/login');
+      
+      if (!isRedirectingToLogin) {
+        isRedirectingToLogin = true;
+        router.replace('/(auth)/login');
+        setTimeout(() => {
+          isRedirectingToLogin = false;
+        }, 500);
+      }
     }
+    
+    // Handle 403 Forbidden
+    if (status === 403) {
+      console.log('[API] Forbidden access - redirecting to login');
+      await AsyncStorage.removeItem('authToken');
+      
+      if (!isRedirectingToLogin) {
+        isRedirectingToLogin = true;
+        router.replace('/(auth)/login');
+        setTimeout(() => {
+          isRedirectingToLogin = false;
+        }, 500);
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

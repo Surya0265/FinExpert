@@ -34,6 +34,22 @@
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "finexpert"
+    "scheme": "finexpert",
+    "projectId": "5f498d01-9a77-48f4-96fa-6c2e97e781aa",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/e2ece512-cff4-4e90-928e-1c7d728b8666"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e2ece512-cff4-4e90-928e-1c7d728b8666"
+      }
+    }
   }
 }
