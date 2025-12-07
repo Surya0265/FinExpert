@@ -1,6 +1,6 @@
 import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_ENDPOINTS } from '@/constants/API';
+import { API_ENDPOINTS } from '../constants/API';
 
 export interface LoginData {
   email: string;

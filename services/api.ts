@@ -1,6 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '@/constants/API';
+import { API_BASE_URL } from '../constants/API';
 import { router } from 'expo-router';
 
 const AUTH_FREE_ENDPOINTS = ['/auth/login', '/auth/register'];
