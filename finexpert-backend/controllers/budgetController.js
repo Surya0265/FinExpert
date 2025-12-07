@@ -274,7 +274,20 @@ exports.checkBudgetAlerts = async (req, res) => {
             });
         }
 
-        const allocatedBudget = budget.allocated_budget;
+        let allocatedBudget;
+        try {
+            allocatedBudget = typeof budget.allocated_budget === 'string' 
+                ? JSON.parse(budget.allocated_budget) 
+                : budget.allocated_budget;
+        } catch (parseError) {
+            console.error("Error parsing allocated budget:", parseError);
+            return res.status(200).json({ 
+                message: "Invalid budget format", 
+                alerts: [],
+                isEmpty: true 
+            });
+        }
+        
         const alerts = {};
         
         const startDate = new Date();
@@ -291,15 +304,15 @@ exports.checkBudgetAlerts = async (req, res) => {
             const allocated = parseFloat(allocatedBudget[category]);
             const spent = parseFloat(currentSpending[category] || 0);
 
-            if (spent > 0.8 * allocated) {
-                alerts[category] = `Warning! You have spent ${spent} out of ${allocated} in ${category}.`;
+            if (!isNaN(allocated) && spent > 0.8 * allocated) {
+                alerts[category] = `Warning! You have spent ₹${spent.toFixed(2)} out of ₹${allocated.toFixed(2)} in ${category}.`;
             }
         }
 
         res.json({ message: "Budget alerts", alerts });
     } catch (error) {
         console.error("Budget Alerts Error:", error);
-        res.status(500).json({ message: "Error checking budget alerts" });
+        res.status(500).json({ message: "Error checking budget alerts", error: error.message });
     }
 };
 

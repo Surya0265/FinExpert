@@ -152,13 +152,13 @@ export default function DashboardScreen() {
           <SafeAreaView edges={['top']} style={styles.safeHeader}>
             <View style={styles.headerTop}>
               <Text style={styles.headerSubtitle}>Welcome back!</Text>
-              <View style={styles.headerLeft}>
-                <Wallet size={28} color="#ffffff" />
-                <Text style={styles.headerAppTitle}>FinExpert</Text>
-              </View>
               <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                 <LogOut size={24} color="#ffffff" />
               </TouchableOpacity>
+            </View>
+            <View style={styles.headerCenter}>
+              <Wallet size={28} color="#ffffff" />
+              <Text style={styles.headerAppTitle}>FinExpert</Text>
             </View>
             <View style={styles.headerBottom}>
               <Text style={styles.headerUsername}>User</Text>
@@ -315,16 +315,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 0,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  logoutButton: {
-    padding: 8,
-  },
-  headerLeft: {
+  headerCenter: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    marginBottom: 12,
   },
+
   headerAppTitle: {
     fontSize: 18,
     fontFamily: 'PoppinsBold',
