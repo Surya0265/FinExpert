@@ -79,8 +79,9 @@ export default function DashboardScreen() {
       console.log('[Dashboard] Normalized category:', normalizedCategory);
     } catch (e: any) {
       console.error('[Dashboard] Error loading data:', e);
-      if (e.response?.status === 401) {
-        setError('Session expired. Please log in again.');
+      if (e.response?.status === 401 || e.response?.status === 404) {
+        await AsyncStorage.removeItem('authToken');
+        router.replace('/(auth)/login');
       } else {
         setError(e.message || 'Failed to load data');
       }
@@ -155,6 +156,9 @@ export default function DashboardScreen() {
                 <Wallet size={28} color="#ffffff" />
                 <Text style={styles.headerAppTitle}>FinExpert</Text>
               </View>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <LogOut size={24} color="#ffffff" />
+              </TouchableOpacity>
             </View>
             <View style={styles.headerBottom}>
               <Text style={styles.headerUsername}>User</Text>
@@ -312,6 +316,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 0,
     marginBottom: 8,
+  },
+  logoutButton: {
+    padding: 8,
   },
   headerLeft: {
     flexDirection: 'row',
